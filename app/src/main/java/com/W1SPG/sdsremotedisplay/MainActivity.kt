@@ -16,6 +16,9 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.felhr.usbserial.UsbSerialDevice
@@ -46,14 +49,13 @@ var rxData: String = ""
 var latitude: Double = 0.0
 var longitude: Double = 0.0
 
-//done:
-// sys, dept, chan hold display
-// show disconnect status
-// get rid of rssi -999
-// add UID to P25 display?
+//Done:
+// removed code for press . on scanner
+// fixed qkstatus not showing on 536
+// keep screen on
 
 //todo:
-// handle press . for serial screen
+// & displayed as &amp
 // close call hit screen
 // search screen
 // clean up display function
@@ -74,6 +76,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED)
         registerReceiver(BroadcastReceiver, filter, RECEIVER_EXPORTED)
         setContent {
+            KeepScreenOn()
             Display()
         }
     }
@@ -85,7 +88,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
 
     private fun DoStuff() {
         var commands = listOf("MDL", "GSI", "LCR", "STS", "PWR")
-        val displayTimerDelay = 0 // delay1
+        val displayTimerDelay = 0
         val displayTimerPeriod = 250 // repeat
 
         val displayTimer = Timer()
@@ -124,7 +127,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
             },  displayTimerDelay .toLong(), displayTimerPeriod.toLong() )
 
             val gpsTimerDelay = 1000
-            val gpsTimerPeriod = 5000 //update gps every 10 seconds
+            val gpsTimerPeriod = 5000 //update gps every 5 seconds
             gpsTimer.schedule(object : TimerTask() {
                 override fun run() {
                     //if (connectedToScanner) {
@@ -143,13 +146,12 @@ class MainActivity : androidx.activity.ComponentActivity() {
         }
     }
 
+    // location stuff
+
     private fun getNMEASentence(): String {
         locationPermissionGranted = checkLocationPermission()
         if (locationPermissionGranted) {
             Log.d("GPS Enabled", "GPS Enabled")
-            //val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-            //val longitude = location?.longitude ?: 0.0
-            //val latitude = location?.latitude ?: 0.0
             var lat = locationDDtoDDm(latitude,false)
             var long = locationDDtoDDm(longitude, true)
 
@@ -279,8 +281,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
     }
 
 
-    //======================
-
+    // USB Stuff
 
     private fun UsbConnect() {
         val usbDevices: HashMap<String, UsbDevice>? = m_usbManager.deviceList
@@ -383,6 +384,17 @@ class MainActivity : androidx.activity.ComponentActivity() {
             } else if (intent?.action!! == UsbManager.ACTION_USB_DEVICE_DETACHED) {
                 //todo: figure out why this intent will not fire
                 UsbDisconnect()
+            }
+        }
+    }
+
+    @Composable
+    fun KeepScreenOn() {
+        val currentView = LocalView.current
+        DisposableEffect(Unit) {
+            currentView.keepScreenOn = true
+            onDispose {
+                currentView.keepScreenOn = false
             }
         }
     }

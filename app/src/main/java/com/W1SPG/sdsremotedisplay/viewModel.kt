@@ -22,9 +22,6 @@ class viewModel : ViewModel() {
     val defaultDeptTextColor = Color(0xFFFF8800)
     val defaultChanTextColor = Color(0xFFFFD600)
 
-    val USBCABLEMESSAGE = "USB Cable Detected"
-    var scannerUSBConnectMesg: Boolean = false
-
     var backGroundColor: Color by mutableStateOf(BACKGROUNDCOLOR)
     var systemTextColor: Color by mutableStateOf(defaultSystemTextColor)
     var systemBackColor: Color by mutableStateOf(BACKGROUNDCOLOR)
@@ -124,6 +121,18 @@ class viewModel : ViewModel() {
     var propertyDir: String = ""
     var propertyRssi: String by mutableStateOf("")
 
+    var srchFreqFreq: String by mutableStateOf("")
+    var srchFreqMode: String by mutableStateOf("")
+
+    var searchBanksBankStatus: String by mutableStateOf("")
+    var searchBanksName: String by mutableStateOf("")
+    var searchBanksBankNo: String by mutableStateOf("")
+
+    var searchRangeLower: String by mutableStateOf("")
+    var searchRangeUpper: String by mutableStateOf("")
+    var searchRangeMod: String by mutableStateOf("")
+    var searchRangeStep: String by mutableStateOf("")
+
     var favoriteQKStatus: String by mutableStateOf("")
     var systemQKStatus: String by mutableStateOf("")
     var departmentQKStatus: String by mutableStateOf("")
@@ -134,7 +143,14 @@ class viewModel : ViewModel() {
     var keyPress: String = ""
     var channel :String by mutableStateOf("")
 
+    var closeCallHit: Boolean = false
+    var searchScreen: Boolean = false
+
     fun getFavQK(): String {
+        if (searchScreen) {
+            return ""
+        }
+        favoriteQKStatus = favoriteQKStatus.trim()
         if (isSDSScanner()) {
             favoriteQKStatus = displayLines[4].take(13)
         } else {
@@ -148,6 +164,7 @@ class viewModel : ViewModel() {
     }
 
     fun getSystemQK(): String {
+        systemQKStatus = systemQKStatus.trim()
         if (isSDSScanner()) {
             systemQKStatus = displayLines[6].take(13)
         } else {
@@ -175,15 +192,21 @@ class viewModel : ViewModel() {
     }
 
     fun getSystem(): String {
-        if (scannerUSBConnectMesg) {
-            return "Press . On Scanner"
+        if (closeCallHit) {
+            return "Close Call Hit"
+        }
+        if (searchScreen) {
+            return "Custom Search"
         }
         return systemName
     }
 
     fun getDept(): String {
-        if (scannerUSBConnectMesg) {
-            return "Or Wait 15 Seconds"
+        if (closeCallHit) {
+            return srchFreqFreq
+        }
+        if (searchScreen) {
+            return srchFreqFreq
         }
         if ((departmentName == "") && (systemName != "Not Connected")) {
             return "Scanning..."
@@ -193,12 +216,13 @@ class viewModel : ViewModel() {
     }
 
     fun getChan(): String {
-        //workaround for data not updating correctly
-        //if (isTrunk()) {
-        //channel = tgidName
-        //} else {
+        if (closeCallHit) {
+            return srchFreqMode
+        }
+        if (searchScreen) {
+            return srchFreqMode
+        }
         channel = convFrequencyName
-        //}
         return channel
     }
 
@@ -211,24 +235,23 @@ class viewModel : ViewModel() {
     }
 
     fun getSVCType(): String {
-        //workaround for data not updating correctly
-        //if (isTrunk()) {
-        //return tgidSvcType
-        //} else {
+        if (closeCallHit) {
+            return ""
+        }
         return convFrequencySvcType
-        //}
     }
 
     fun getFrequency(): String {
-        //workaround for data not updating correctly
-        //if (isTrunk()) {
-        //return siteFrequencyFreq
-        //} else {
+        if (closeCallHit) {
+            return ""
+        }
         return convFrequencyFreq
-        //}
     }
 
     fun getMode(): String {
+        if (closeCallHit) {
+            return ""
+        }
         if (isTrunk() && unitU_Id != "") {
             return unitIDName
         } else {
@@ -237,10 +260,16 @@ class viewModel : ViewModel() {
     }
 
     fun getSite(): String {
+        if (closeCallHit) {
+            return ""
+        }
         return siteName
     }
 
     fun getTGIDID(): String {
+        if (closeCallHit) {
+            return ""
+        }
         return tgidTGID
     }
 
@@ -418,19 +447,13 @@ class viewModel : ViewModel() {
     }
 
     fun lostConnection() {
-        systemName = "Lost Connection"
-        departmentName = "to scanner"
+        systemName = "Not Connected"
+        departmentName = ""
         tgidName = ""
         convFrequencyName = ""
     }
 
     fun checkForChanges() {
-        //todo add correct line for 536
-        if (displayLines[6] == USBCABLEMESSAGE || displayLines[6] == USBCABLEMESSAGE) {
-            scannerUSBConnectMesg = true
-        } else {
-            scannerUSBConnectMesg = false
-        }
 
         if (systemHold == "On") {
             systemTextColor = BACKGROUNDCOLOR
@@ -454,6 +477,19 @@ class viewModel : ViewModel() {
         } else {
             channelTextColor = defaultChanTextColor
             channelBackColor = BACKGROUNDCOLOR
+        }
+
+        //close call hit
+        if (scannerInfoV_screen == "close_call") {
+            closeCallHit = true
+        } else {
+            closeCallHit = false
+        }
+
+        if (scannerInfoV_screen == "custom_search") {
+            searchScreen = true
+        } else {
+            searchScreen = false
         }
 
     }

@@ -133,6 +133,24 @@ class ParseScannerData(var vm: viewModel) {
                         vm.propertyRssi = GSI_FindItem(message, "Rssi")
                     }
 
+                    "<SrchFrequency" -> {
+                        vm.srchFreqFreq = GSI_FindItem(message, "Freq")
+                        vm.srchFreqMode = GSI_FindItem(message, "Mod")
+                    }
+
+                    "<SearchBanks" -> {
+                        vm.searchBanksBankStatus = GSI_FindItem(message, "BankStatus")
+                        vm.searchBanksName = GSI_FindItem(message, "Name")
+                        vm.searchBanksBankNo = GSI_FindItem(message, "BankNo")
+                    }
+
+                    "<SearchRange" -> {
+                        vm.searchRangeLower = GSI_FindItem(message, "Lower")
+                        vm.searchRangeUpper = GSI_FindItem(message, "Upper")
+                        vm.searchRangeMod = GSI_FindItem(message, "Mod")
+                        vm.searchRangeStep = GSI_FindItem(message, "Step")
+                    }
+
 
                     "MDL" -> {
                         // ex. MDL,BCD536HP
