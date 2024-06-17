@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.hardware.usb.UsbAccessory
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbManager
@@ -49,18 +48,20 @@ var rxData: String = ""
 var latitude: Double = 0.0
 var longitude: Double = 0.0
 
+val displayTimer = Timer()
+val gpsTimer = Timer()
+
 //Done:
 // removed code for press . on scanner
 // fixed qkstatus not showing on 536
 // keep screen on
-
-//todo:
 // & displayed as &amp
+// auto dismiss "press "." for serial (SDS only?)
 // close call hit screen
 // search screen
-// clean up display function
-// try to stop qk display from shifting
-// check location denied path
+// speed 57600
+
+//todo:
 // create landscape display
 
 class MainActivity : androidx.activity.ComponentActivity() {
@@ -89,10 +90,8 @@ class MainActivity : androidx.activity.ComponentActivity() {
     private fun DoStuff() {
         var commands = listOf("MDL", "GSI", "LCR", "STS", "PWR")
         val displayTimerDelay = 0
-        val displayTimerPeriod = 250 // repeat
+        val displayTimerPeriod = 150 // repeat
 
-        val displayTimer = Timer()
-        val gpsTimer = Timer()
         try {
             displayTimer.schedule(object : TimerTask() {
                 override fun run() {
@@ -103,7 +102,10 @@ class MainActivity : androidx.activity.ComponentActivity() {
                             }
                             //send any button presses
                             if (vm.keyPress != "") {
-                                SendUsbData(vm.keyPress)
+                                var keys = vm.keyPress.split(" ")
+                                for (key in keys) {
+                                    SendUsbData(key)
+                                }
                                 vm.keyPress = ""
                             }
 
@@ -113,14 +115,16 @@ class MainActivity : androidx.activity.ComponentActivity() {
                                     m_usbManager.deviceList
                                 if (deviceList != null) {
                                     if (deviceList.isEmpty()) {
-                                        vm.lostConnection()
+                                        vm.lostConnection = true
+                                    } else {
+                                        vm.lostConnection = false
                                     }
                                 }
                             } catch (e: Exception) {
-                                println("Error: ${e.message}")
+                                //println("Error: ${e.message}")
                             }
 
-                            vm.checkForChanges()
+                            vm.updateDisplayData()
                         }
                     }
                 }
@@ -142,7 +146,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
 
 
         } catch (e: Exception) {
-            println("Error: ${e.message}")
+            //println("Error: ${e.message}")
         }
     }
 
@@ -196,7 +200,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
                             locationListener
                         )
                     } catch (e: Exception) {
-                        println("Error: ${e.message}")
+                        //println("Error: ${e.message}")
                     }
                 }
                 return true
@@ -322,8 +326,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
                 Log.d("Sent:", input )
             }
         } catch (e: Exception) {
-            Log.e("Error:", (e.message).toString())
-            println()
+            //Log.e("Error:", (e.message).toString())
         }
     }
 
@@ -336,7 +339,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
                 if (usbRxData.contains("ERR")) {
                     return
                 }
-                //Log.d("Partial:", usbRxData)
+                Log.d("Partial:", usbRxData)
                 rxData += usbRxData
 
                 var lastChar: String = usbRxData.takeLast(1)
@@ -346,7 +349,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
                     rxData = ""
                 }
             } catch (e: Exception) {
-                println("Error: ${e.message}")
+                //println("Error: ${e.message}")
             }
         }
     }
@@ -369,7 +372,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
                     m_serial = UsbSerialDevice.createUsbSerialDevice(m_device, m_connection)
                     if (m_serial != null) {
                         if (m_serial!!.open()) {
-                            m_serial!!.setBaudRate(9600)
+                            m_serial!!.setBaudRate(57600)
                             m_serial!!.setDataBits(DATA_BITS_8)
                             m_serial!!.setStopBits(STOP_BITS_1)
                             m_serial!!.setParity(PARITY_NONE)

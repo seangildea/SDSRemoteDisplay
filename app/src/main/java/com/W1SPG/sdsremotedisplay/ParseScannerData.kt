@@ -9,7 +9,7 @@ class ParseScannerData(var vm: viewModel) {
             var messages = responseString.split("\r")
             for (message in messages) {
                 var message = message.trimStart() //remove spaces from beginning
-                Log.d("Message: ", message)
+                //Log.d("Message: ", message)
                 var messageType: String = ""
 
                 if (message.take(1) == "<") { //xml lines
@@ -136,6 +136,7 @@ class ParseScannerData(var vm: viewModel) {
                     "<SrchFrequency" -> {
                         vm.srchFreqFreq = GSI_FindItem(message, "Freq")
                         vm.srchFreqMode = GSI_FindItem(message, "Mod")
+                        vm.srchFreqHold = GSI_FindItem(message, "Hold")
                     }
 
                     "<SearchBanks" -> {
@@ -154,7 +155,7 @@ class ParseScannerData(var vm: viewModel) {
 
                     "MDL" -> {
                         // ex. MDL,BCD536HP
-                        vm.model = message.substring((message.indexOf(",") + 1),)
+                        vm.model = message.substring((message.indexOf(",") + 1))
                     }
 
                     "LCR" -> {
@@ -186,16 +187,18 @@ class ParseScannerData(var vm: viewModel) {
                 }
             }
         } catch (e: Exception) {
-            println("Error: ${e.message}")
+            //println("Error: ${e.message}")
         }
     }
 
     private fun GSI_FindItem(textLine: String, name: String, beginIndex: Int = 0): String {
-        if ( textLine.substring(beginIndex).contains(name) ) {
+        if ( textLine.substring(beginIndex).contains(" " + name) ) {
             val itemName = name + "=\""
             val start = textLine.indexOf(itemName, beginIndex) + itemName.length
             val end = textLine.indexOf("\"", start)
-            val result = textLine.substring(start, end)
+            var result = textLine.substring(start, end)
+
+            result = result.replace("&amp;", "&")
             return result
         } else {
             return ""

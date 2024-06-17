@@ -1,12 +1,11 @@
 package com.W1SPG.sdsremotedisplay
 
-import android.hardware.usb.UsbAccessory
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.core.graphics.toColorInt
 import androidx.lifecycle.ViewModel
-
 
 class viewModel : ViewModel() {
 
@@ -18,6 +17,7 @@ class viewModel : ViewModel() {
     val YELLOW: Color = Color(0xFFFFD600)
     val WHITE: Color = Color(0xFFFFFFFF)
     val BACKGROUNDCOLOR: Color = Color(0xFF444444)
+    val FOOTERTEXTCOLOR: Color = Color("#e77475".toColorInt())
     val defaultSystemTextColor = Color(0xFFFF4600)
     val defaultDeptTextColor = Color(0xFFFF8800)
     val defaultChanTextColor = Color(0xFFFFD600)
@@ -31,8 +31,8 @@ class viewModel : ViewModel() {
     var channelBackColor:  Color by mutableStateOf(BACKGROUNDCOLOR)
 
     var model: String = ""
-    var latitude: String by mutableStateOf("")
-    var longitude: String by mutableStateOf("")
+    var latitude: String = ""
+    var longitude: String = ""
     var range: String = ""
 
     var displayLines = Array<String>(50) { "" }
@@ -47,27 +47,27 @@ class viewModel : ViewModel() {
     var monitorListN_Tag: String = ""
     var monitorListDB_Counter: String = ""
 
-    var systemName: String by mutableStateOf("Not Connected")
+    var systemName: String = ""
     var systemIndex: String = ""
     var systemAvoid: String = ""
-    var systemSystemType: String by mutableStateOf("")
+    var systemSystemType: String = ""
     var systemQ_Key: String = ""
     var systemN_Tag: String = ""
     var systemHold: String = ""
 
-    var departmentName: String by mutableStateOf("")
+    var departmentName: String = ""
     var departmentIndex: String = ""
     var departmentAvoid: String = ""
     var departmentQ_Key: String = ""
     var departmentHold: String = ""
 
-    var convFrequencyName: String by mutableStateOf("")
+    var convFrequencyName: String = ""
     var convFrequencyIndex: String = ""
     var convFrequencyAvoid: String = ""
-    var convFrequencyFreq: String by mutableStateOf("")
-    var convFrequencyMod: String by mutableStateOf("")
+    var convFrequencyFreq: String = ""
+    var convFrequencyMod: String = ""
     var convFrequencyHold: String = ""
-    var convFrequencySvcType: String by mutableStateOf("")
+    var convFrequencySvcType: String = ""
     var convFrequencyP_Ch: String = ""
     var convFrequencySAS: String = ""
     var convFrequencySAD: String = ""
@@ -77,28 +77,25 @@ class viewModel : ViewModel() {
     var convFrequencyTGID: String = ""
     var convFrequencyU_Id: String = ""
 
-    var tgidName: String by mutableStateOf("")
     var tgidIndex: String = ""
     var tgidAvoid: String = ""
-    var tgidTGID: String by mutableStateOf("")
+    var tgidTGID: String = ""
     var tgidSetSlot: String = ""
     var tgidN_Tag: String = ""
     var tgidHold: String = ""
-    var tgidSvcType: String by mutableStateOf("")
+    var tgidSvcType: String  = ""
     var tgidP_Ch: String = ""
     var tgidLVL: String = ""
 
-    var unitIDName: String by mutableStateOf("")
-    var unitU_Id: String by mutableStateOf("")
+    var unitIDName: String = ""
+    var unitU_Id: String = ""
 
-    var siteName: String by mutableStateOf("")
+    var siteName: String = ""
     var siteIndex: String = ""
     var siteAvoid: String = ""
     var siteQ_Key: String = ""
     var siteHold: String = ""
-    var siteMod: String by mutableStateOf("")
 
-    var siteFrequencyFreq: String by mutableStateOf("")
     var siteFrequencyIFX: String = ""
     var siteFrequencySAS: String = ""
     var siteFrequencySAD: String = ""
@@ -108,8 +105,8 @@ class viewModel : ViewModel() {
     var dualWatchWX: String = ""
 
     var propertyF: String = ""
-    var propertyVOL: String by mutableStateOf("")
-    var propertySQL: String by mutableStateOf("")
+    var propertyVOL: String = ""
+    var propertySQL: String = ""
     var propertySig: String = ""
     var propertyAtt: String = ""
     var propertyRec: String = ""
@@ -119,188 +116,51 @@ class viewModel : ViewModel() {
     var propertyBacklight: String = ""
     var propertyA_led: String = ""
     var propertyDir: String = ""
-    var propertyRssi: String by mutableStateOf("")
+    var propertyRssi: String = ""
 
-    var srchFreqFreq: String by mutableStateOf("")
-    var srchFreqMode: String by mutableStateOf("")
+    var srchFreqFreq: String = ""
+    var srchFreqMode: String = ""
+    var srchFreqHold: String = ""
+    var searchBanksBankStatus: String = ""
+    var searchBanksName: String = ""
+    var searchBanksBankNo: String = ""
+    var searchRangeLower: String = ""
+    var searchRangeUpper: String = ""
+    var searchRangeMod: String = ""
+    var searchRangeStep: String = ""
 
-    var searchBanksBankStatus: String by mutableStateOf("")
-    var searchBanksName: String by mutableStateOf("")
-    var searchBanksBankNo: String by mutableStateOf("")
-
-    var searchRangeLower: String by mutableStateOf("")
-    var searchRangeUpper: String by mutableStateOf("")
-    var searchRangeMod: String by mutableStateOf("")
-    var searchRangeStep: String by mutableStateOf("")
-
-    var favoriteQKStatus: String by mutableStateOf("")
-    var systemQKStatus: String by mutableStateOf("")
-    var departmentQKStatus: String by mutableStateOf("")
-
-    var pwrRSSI: String by mutableStateOf("")
+    var pwrRSSI: String = ""
     var pwrFreq: String = ""
 
     var keyPress: String = ""
-    var channel :String by mutableStateOf("")
 
     var closeCallHit: Boolean = false
     var searchScreen: Boolean = false
 
-    fun getFavQK(): String {
-        if (searchScreen) {
-            return ""
-        }
-        favoriteQKStatus = favoriteQKStatus.trim()
-        if (isSDSScanner()) {
-            favoriteQKStatus = displayLines[4].take(13)
-        } else {
-            favoriteQKStatus = displayLines[2].take(13)
-        }
-        if (favoriteQKStatus.take(1)  == "F") {
-            return favoriteQKStatus
-        } else {
-            return ""
-        }
-    }
+    var displayLED: Color by mutableStateOf(backGroundColor)
+    var displayQuickKeyStatus1: String by mutableStateOf("")
+    var displayQuickKeyStatus2: String by mutableStateOf("")
+    var displayQuickKeyStatus3: String by mutableStateOf("")
+    var displayVolume: String by mutableStateOf("")
+    var displaySquelch: String by mutableStateOf("")
+    var displayHeader1: String by mutableStateOf("Not Connected")
+    var displayHeader2: String by mutableStateOf("")
+    var displayHeader3: String by mutableStateOf("")
+    var displayFooter1: String by mutableStateOf("")
+    var displayFooter2: String by mutableStateOf("")
+    var displayFooter3: String by mutableStateOf("")
+    var displayFooter4: String by mutableStateOf("")
+    var displayFooter5: String by mutableStateOf("")
+    var displayFooter6: String by mutableStateOf("")
+    var displayFooter7: String by mutableStateOf("")
+    var displayLatitude: String by mutableStateOf("")
+    var displayLongitude: String by mutableStateOf("")
+    var holdButtonText: String by mutableStateOf("Hold")
 
-    fun getSystemQK(): String {
-        systemQKStatus = systemQKStatus.trim()
-        if (isSDSScanner()) {
-            systemQKStatus = displayLines[6].take(13)
-        } else {
-            systemQKStatus = displayLines[4].take(13)
-        }
-        if (systemQKStatus.take(1) == "S") {
-            return systemQKStatus
-        } else {
-            return ""
-        }
+    var textDisplayWeight: Float = .85f
 
-    }
+    var lostConnection: Boolean = false
 
-    fun getDeptQK(): String {
-        if (isSDSScanner()) {
-            departmentQKStatus = displayLines[8].take(13)
-        } else {
-            departmentQKStatus = ""
-        }
-        if (departmentQKStatus.take(1) == "D") {
-            return departmentQKStatus
-        } else {
-            return ""
-        }
-    }
-
-    fun getSystem(): String {
-        if (closeCallHit) {
-            return "Close Call Hit"
-        }
-        if (searchScreen) {
-            return "Custom Search"
-        }
-        return systemName
-    }
-
-    fun getDept(): String {
-        if (closeCallHit) {
-            return srchFreqFreq
-        }
-        if (searchScreen) {
-            return srchFreqFreq
-        }
-        if ((departmentName == "") && (systemName != "Not Connected")) {
-            return "Scanning..."
-        } else {
-            return departmentName
-        }
-    }
-
-    fun getChan(): String {
-        if (closeCallHit) {
-            return srchFreqMode
-        }
-        if (searchScreen) {
-            return srchFreqMode
-        }
-        channel = convFrequencyName
-        return channel
-    }
-
-    fun getVolume(): String {
-        return "Vol: " + propertyVOL
-    }
-
-    fun getSquelch(): String {
-        return "SQ: " + propertySQL
-    }
-
-    fun getSVCType(): String {
-        if (closeCallHit) {
-            return ""
-        }
-        return convFrequencySvcType
-    }
-
-    fun getFrequency(): String {
-        if (closeCallHit) {
-            return ""
-        }
-        return convFrequencyFreq
-    }
-
-    fun getMode(): String {
-        if (closeCallHit) {
-            return ""
-        }
-        if (isTrunk() && unitU_Id != "") {
-            return unitIDName
-        } else {
-            return convFrequencyMod
-        }
-    }
-
-    fun getSite(): String {
-        if (closeCallHit) {
-            return ""
-        }
-        return siteName
-    }
-
-    fun getTGIDID(): String {
-        if (closeCallHit) {
-            return ""
-        }
-        return tgidTGID
-    }
-
-    fun getRSSI(): String {
-        try {
-            if (systemName == "Not Connected") {
-                return ""
-            }
-            var rssiString = ""
-            if (pwrRSSI != "") {
-                var rssiVal = pwrRSSI.toDouble()
-                if (rssiVal == -999.0) {
-                    rssiString = "---"
-                } else {
-                    rssiString = pwrRSSI
-                }
-            }
-            return "RSSI:" + rssiString
-        } catch (e: Exception) {
-            println("Error: ${e.message}")
-            return ""
-        }
-    }
-
-    fun getLat(): String {
-        return "Latitude: " + latitude
-    }
-
-    fun getLong(): String {
-        return "Longitude: " + longitude
-    }
 
     fun isTrunk(): Boolean { // true if channel is trunked, false if conventional
         if (scannerInfoV_screen == "trunk_scan") {
@@ -325,6 +185,15 @@ class viewModel : ViewModel() {
                 "system" -> keyPress = "KEY,A,P"
                 "department" -> keyPress = "KEY,B,P"
                 "channel" -> keyPress = "KEY,C,P"
+                "hold" -> keyPress = "KEY,C,P"
+                "toscan" -> if (isSDSScanner()) {
+                    keyPress = "KEY,A,P"
+                } else {
+                    keyPress =  "KEY,F,P KEY,A,P"
+                }
+                "dot" -> keyPress = "KEY,.,P"
+                "<" -> keyPress = "KEY,<,P"
+                ">" -> keyPress = "KEY,>,P"
 
                 "volup" -> {
                     var curVol = propertyVOL.toInt()
@@ -359,102 +228,39 @@ class viewModel : ViewModel() {
                 }
             }
         } catch (e: Exception) {
-            println("Error: ${e.message}")
+            //println("Error: ${e.message}")
         }
     }
 
-    fun getBackGrndColor(): Color {
-        return backGroundColor
-    }
-
-    fun getLEDColor(): androidx.compose.ui.graphics.Color {
-        when (propertyA_led) {
-            //Blue, Red, Magenta, Green, Cyan, Yellow, White, Off
-            "Blue" -> return BLUE
-            "Red" -> return RED
-            "Magenta" -> return MAGENTA
-            "Green" -> return GREEN
-            "Cyan" -> return CYAN
-            "Yellow" -> return YELLOW
-            "White" -> return WHITE
-            "Off" -> return backGroundColor
-            else -> return backGroundColor
-        }
-    }
-
-    fun getSysTextColor(): Color {
-        if (systemHold == "On") {
-            return backGroundColor
-        } else {
-            return systemTextColor
-        }
-    }
-
-    fun getSysBackgroundColor(): Color {
-        if (systemHold == "On") {
-            return systemTextColor
-        } else {
-            return backGroundColor
-        }
-    }
-
-    fun getDeptTextColor(): Color {
-        if (departmentHold == "On") {
-            return backGroundColor
-        } else {
-            return departmentTextColor
-        }
-    }
-
-    fun getDeptBackgroundColor(): Color {
-        if (departmentHold == "On") {
-            return departmentTextColor
-        } else {
-            return backGroundColor
-        }
-    }
-
-    fun getChanTextColor(): Color {
-        if (isTrunk()) { //trunk channel
-            if (tgidHold == "On") {
-                return backGroundColor
-            } else {
-                return channelTextColor
+    fun getRSSI(): String {
+        try {
+            var rssiString = ""
+            if (pwrRSSI != "") {
+                var rssiVal = pwrRSSI.toDouble()
+                if (rssiVal == -999.0) {
+                    rssiString = "---"
+                } else {
+                    rssiString = pwrRSSI
+                }
             }
-        } else { // Conventional channel
-            if (convFrequencyHold == "On") {
-                return backGroundColor
-            } else {
-                return channelTextColor
-            }
+            return "RSSI:" + rssiString + " dBm"
+        } catch (e: Exception) {
+            //println("Error: ${e.message}")
+            return ""
         }
     }
 
-    fun getChanBackgroundColor(): Color {
-        if (isTrunk()) { //trunk channel
-            if (tgidHold == "On") {
-                return channelTextColor
-            } else {
-                return backGroundColor
-            }
-        } else { // Conventional channel
-            if (convFrequencyHold == "On") {
-                return channelTextColor
-            } else {
-                return backGroundColor
-            }
+    fun updateDisplayData() {
+
+        /*
+        //todo: remove this?
+        if ("USB Cable Detected" in displayLines[6]) {
+            pressButton("dot")
+            displayLines[6] = ""
         }
-    }
+        */
 
-    fun lostConnection() {
-        systemName = "Not Connected"
-        departmentName = ""
-        tgidName = ""
-        convFrequencyName = ""
-    }
-
-    fun checkForChanges() {
-
+        //system hold
         if (systemHold == "On") {
             systemTextColor = BACKGROUNDCOLOR
             systemBackColor = defaultSystemTextColor
@@ -463,6 +269,7 @@ class viewModel : ViewModel() {
             systemBackColor = BACKGROUNDCOLOR
         }
 
+        //department hold
         if (departmentHold == "On") {
             departmentTextColor = BACKGROUNDCOLOR
             deptBackColor = defaultDeptTextColor
@@ -471,6 +278,7 @@ class viewModel : ViewModel() {
             deptBackColor = BACKGROUNDCOLOR
         }
 
+        //channel hold
         if (tgidHold == "On" || convFrequencyHold == "On") {
             channelTextColor = BACKGROUNDCOLOR
             channelBackColor = defaultChanTextColor
@@ -479,18 +287,185 @@ class viewModel : ViewModel() {
             channelBackColor = BACKGROUNDCOLOR
         }
 
-        //close call hit
-        if (scannerInfoV_screen == "close_call") {
-            closeCallHit = true
+        //search hold
+        if (searchScreen && srchFreqHold == "On") { //search hold
+            channelTextColor = BACKGROUNDCOLOR
+            channelBackColor = defaultChanTextColor
+            holdButtonText = "Resume"
+        } else if (closeCallHit && srchFreqHold == "On") { //close call hold
+            channelTextColor = BACKGROUNDCOLOR
+            channelBackColor = defaultChanTextColor
+            holdButtonText = "Release"
         } else {
-            closeCallHit = false
+            channelTextColor = defaultChanTextColor
+            channelBackColor = BACKGROUNDCOLOR
+            holdButtonText = "Hold"
         }
 
-        if (scannerInfoV_screen == "custom_search") {
-            searchScreen = true
-        } else {
-            searchScreen = false
+        when (scannerInfoV_screen) {
+            "close_call" -> {
+                closeCallHit = true
+                textDisplayWeight = .75f
+            }
+            "custom_search" -> {
+                searchScreen = true
+                textDisplayWeight = .75f
+            }
+            else -> {
+                closeCallHit = false
+                searchScreen = false
+                textDisplayWeight = .85f
+            }
         }
 
+        //LED
+        when (propertyA_led) {
+            //Blue, Red, Magenta, Green, Cyan, Yellow, White, Off
+            "Blue" -> displayLED = BLUE
+            "Red" -> displayLED = RED
+            "Magenta" -> displayLED = MAGENTA
+            "Green" -> displayLED = GREEN
+            "Cyan" -> displayLED = CYAN
+            "Yellow" -> displayLED = YELLOW
+            "White" -> displayLED = WHITE
+            "Off" -> displayLED = backGroundColor
+            else -> displayLED = backGroundColor
+        }
+
+        //QuickKeyStatus field 1
+        when {
+            closeCallHit -> displayQuickKeyStatus1 = ""
+            searchScreen -> displayQuickKeyStatus1 = "Search"
+            isSDSScanner() -> displayQuickKeyStatus1 = displayLines[4].take(13).trim()
+            !(isSDSScanner()) -> displayQuickKeyStatus1 = displayLines[2].take(13).trim()
+            else -> displayQuickKeyStatus1 = ""
+        }
+
+        //Quick key status field 2
+        try {
+            when {
+                closeCallHit -> displayQuickKeyStatus2 = ""
+                isSDSScanner() -> displayQuickKeyStatus2 = displayLines[6].take(13).trim()
+                !(isSDSScanner()) -> displayQuickKeyStatus2 = displayLines[4].take(13).trim()
+                else -> displayQuickKeyStatus2 = ""
+            }
+        } catch (e: Exception) {
+            println(e)
+            // rare exception here when STS result only has 4 entries during search
+        }
+
+        //Quick key status field 3
+        try {
+            when {
+                closeCallHit -> displayQuickKeyStatus3 = ""
+                isSDSScanner() -> displayQuickKeyStatus3 = displayLines[8].take(13).trim()
+                else -> displayQuickKeyStatus3 = ""
+            }
+        } catch (e: Exception) {
+            println(e)
+            // rare exception here when STS result only has 4 entries during search
+            // not sure if we are missing responses or the scanner is not sending them
+        }
+
+        //volume
+        displayVolume = "Vol: " + propertyVOL
+        //squelch
+        displaySquelch = "SQ: " + propertySQL
+
+        //Header 1 display (system name / "Close call" label / "Searching" label)
+        when {
+            lostConnection -> displayHeader1 = "Lost Connection"
+            closeCallHit -> displayHeader1 = "Close Call"
+            searchScreen -> displayHeader1 = "Searching"
+            else -> displayHeader1 = systemName
+        }
+
+        //Header 2 display (dept name / "Scanning" label / search bank name / close call freq)
+        when {
+            lostConnection -> displayHeader2 = ""
+            searchScreen -> displayHeader2 = searchBanksName
+            closeCallHit -> displayHeader2 = ""
+            (departmentName == "") && (systemName != "Not Connected") -> displayHeader2 = "Scanning..."
+            else -> displayHeader2 = departmentName
+        }
+
+        //Header 3 display ( freq name / search freq )
+        when {
+            lostConnection -> displayHeader3 = ""
+            searchScreen -> displayHeader3 = srchFreqFreq
+            closeCallHit -> displayHeader3 =  srchFreqFreq
+            else -> displayHeader3 = convFrequencyName
+        }
+
+        //footer 1 (svcType /  current search mode / close call hit mode)
+        when {
+            closeCallHit -> displayFooter1 = srchFreqMode
+            searchScreen -> displayFooter1 = srchFreqMode
+            else -> displayFooter1 = convFrequencySvcType
+        }
+
+        //Footer 2 (Frequency / Lower search range)
+        when {
+            searchScreen -> displayFooter2 = "Lower: " + searchRangeLower
+            closeCallHit -> displayFooter2 = getRSSI()
+            else -> displayFooter2 = convFrequencyFreq
+        }
+
+        //Footer 3 (Mode/UID Name/upper search rannge)
+        when {
+            searchScreen -> displayFooter3 = "Upper: " + searchRangeUpper
+            closeCallHit -> displayFooter3 = ""
+            (isTrunk() && unitU_Id != "") -> displayFooter3 = unitIDName
+            else -> displayFooter3 = convFrequencyMod
+        }
+
+        //Footer 4 (Site)
+        when {
+            searchScreen -> displayFooter4 = "Step: " + searchRangeStep
+            closeCallHit -> displayFooter4 = ""
+            isTrunk() -> displayFooter4 = siteName
+            else -> displayFooter4 = ""
+        }
+
+        //Footer 5 (TGID ID)
+        when {
+            searchScreen -> displayFooter5 = getRSSI()
+            closeCallHit -> displayFooter5 = ""
+            isTrunk() -> displayFooter5 = tgidTGID
+            else -> displayFooter5 = ""
+        }
+
+        //Footer 6 (P25 Trunk)
+        when {
+            (systemSystemType == "P25 Trunk") -> displayFooter6 = systemSystemType
+            else -> displayFooter6 = ""
+        }
+
+        //Footer 7 (RSSI)
+        when {
+            (systemName == "Not Connected") -> displayFooter7 = ""
+            isSDSScanner() &&  !searchScreen -> displayFooter7 = getRSSI()
+            else -> displayFooter7 = ""
+        }
+
+        //Lat - Long
+        when {
+            closeCallHit -> {
+                displayLatitude = ""
+                displayLongitude = ""
+            }
+            searchScreen -> {
+                displayLatitude = ""
+                displayLongitude = ""
+            }
+            locationPermissionGranted -> {
+                displayLatitude = "Latitude: " + latitude
+                displayLongitude = "Longitude: " + longitude
+            }
+            else -> {
+                displayLatitude = ""
+                displayLongitude = ""
+            }
+        }
     }
 }
