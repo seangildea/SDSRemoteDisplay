@@ -22,7 +22,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.felhr.usbserial.UsbSerialDevice
 import com.felhr.usbserial.UsbSerialInterface.DATA_BITS_8
-import com.felhr.usbserial.UsbSerialInterface.FLOW_CONTROL_XON_XOFF
+import com.felhr.usbserial.UsbSerialInterface.FLOW_CONTROL_OFF
 import com.felhr.usbserial.UsbSerialInterface.PARITY_NONE
 import com.felhr.usbserial.UsbSerialInterface.STOP_BITS_1
 import com.felhr.usbserial.UsbSerialInterface.UsbReadCallback
@@ -51,18 +51,7 @@ var longitude: Double = 0.0
 val displayTimer = Timer()
 val gpsTimer = Timer()
 
-//Done:
-// removed code for press . on scanner
-// fixed qkstatus not showing on 536
-// keep screen on
-// & displayed as &amp
-// auto dismiss "press "." for serial (SDS only?)
-// close call hit screen
-// search screen
-// speed 57600
 
-//todo:
-// create landscape display
 
 class MainActivity : androidx.activity.ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,20 +79,24 @@ class MainActivity : androidx.activity.ComponentActivity() {
     private fun DoStuff() {
         var commands = listOf("MDL", "GSI", "LCR", "STS", "PWR")
         val displayTimerDelay = 0
-        val displayTimerPeriod = 150 // repeat
+        val displayTimerPeriod = 300 // repeat
 
         try {
             displayTimer.schedule(object : TimerTask() {
                 override fun run() {
                     runOnUiThread {
                         if (connectedToScanner) {
-                            for (command in commands) {
-                                SendUsbData(command)
+                            if (vm.clearToSend) {
+                                for (command in commands) {
+                                    SendUsbData(command)
+                                }
                             }
+
                             //send any button presses
                             if (vm.keyPress != "") {
                                 var keys = vm.keyPress.split(" ")
                                 for (key in keys) {
+                                    Log.d("In Key press",  key)
                                     SendUsbData(key)
                                 }
                                 vm.keyPress = ""
@@ -138,7 +131,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
                         var nmeaSentence = getNMEASentence()
                         if (nmeaSentence != "") {
                             SendUsbData(nmeaSentence)
-                            //Log.d("NMEA Sent", nmeaSentence)
+                            Log.d("NMEA Sent", nmeaSentence)
                         }
                     //}
                 }
@@ -323,7 +316,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
             var byteInput = input.toByteArray() + "\r".toByteArray()
             if (m_serial != null) {
                 m_serial?.write(byteInput)
-                Log.d("Sent:", input )
+                //Log.d("Sent:", input )
             }
         } catch (e: Exception) {
             //Log.e("Error:", (e.message).toString())
@@ -336,16 +329,24 @@ class MainActivity : androidx.activity.ComponentActivity() {
             try {
                 //Log.d("Byte:", rx.joinToString("") { "%02x".format(it) })
                 var usbRxData = String(rx, Charsets.UTF_8)
+
+
+                if (usbRxData.contains("MDL")) {
+                    vm.lastResponseTime = System.currentTimeMillis()
+                }
+
                 if (usbRxData.contains("ERR")) {
                     return
                 }
-                Log.d("Partial:", usbRxData)
+                //Log.d("Partial:", usbRxData)
                 rxData += usbRxData
 
                 var lastChar: String = usbRxData.takeLast(1)
                 if (lastChar == "\r") { //concatenate until last char is \r
                     Log.d("Rx:", rxData)
-                    sdsData.decodeResponse(rxData)
+                    if (rxData != "") {
+                        sdsData.decodeResponse(rxData)
+                    }
                     rxData = ""
                 }
             } catch (e: Exception) {
@@ -372,11 +373,11 @@ class MainActivity : androidx.activity.ComponentActivity() {
                     m_serial = UsbSerialDevice.createUsbSerialDevice(m_device, m_connection)
                     if (m_serial != null) {
                         if (m_serial!!.open()) {
-                            m_serial!!.setBaudRate(57600)
+                            m_serial!!.setBaudRate(115200)
                             m_serial!!.setDataBits(DATA_BITS_8)
                             m_serial!!.setStopBits(STOP_BITS_1)
                             m_serial!!.setParity(PARITY_NONE)
-                            m_serial!!.setFlowControl(FLOW_CONTROL_XON_XOFF)
+                            m_serial!!.setFlowControl(FLOW_CONTROL_OFF)
                             m_serial!!.read(mCallback)
                             connectedToScanner = true
                         }

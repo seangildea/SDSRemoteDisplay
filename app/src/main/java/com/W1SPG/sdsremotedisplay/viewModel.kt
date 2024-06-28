@@ -1,10 +1,10 @@
 package com.W1SPG.sdsremotedisplay
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import androidx.core.graphics.toColorInt
 import androidx.lifecycle.ViewModel
 
 class viewModel : ViewModel() {
@@ -17,7 +17,7 @@ class viewModel : ViewModel() {
     val YELLOW: Color = Color(0xFFFFD600)
     val WHITE: Color = Color(0xFFFFFFFF)
     val BACKGROUNDCOLOR: Color = Color(0xFF444444)
-    val FOOTERTEXTCOLOR: Color = Color("#e77475".toColorInt())
+    val FOOTERTEXTCOLOR: Color = Color(0xFFe77475)
     val defaultSystemTextColor = Color(0xFFFF4600)
     val defaultDeptTextColor = Color(0xFFFF8800)
     val defaultChanTextColor = Color(0xFFFFD600)
@@ -83,7 +83,7 @@ class viewModel : ViewModel() {
     var tgidSetSlot: String = ""
     var tgidN_Tag: String = ""
     var tgidHold: String = ""
-    var tgidSvcType: String  = ""
+    //var tgidSvcType: String  = ""
     var tgidP_Ch: String = ""
     var tgidLVL: String = ""
 
@@ -156,11 +156,15 @@ class viewModel : ViewModel() {
     var displayLatitude: String by mutableStateOf("")
     var displayLongitude: String by mutableStateOf("")
     var holdButtonText: String by mutableStateOf("Hold")
+    var closeCallString:String by mutableStateOf("")
 
     var textDisplayWeight: Float = .85f
 
     var lostConnection: Boolean = false
 
+    var clearToSend: Boolean = true
+    var lastResponseTime: Long = 0
+    var clearToSendWatchdogTimer: Long = 0
 
     fun isTrunk(): Boolean { // true if channel is trunked, false if conventional
         if (scannerInfoV_screen == "trunk_scan") {
@@ -170,7 +174,7 @@ class viewModel : ViewModel() {
         }
     }
 
-    fun isSDSScanner(): Boolean { //true if scanner is SDS100 or SDS200, false if not
+    fun isSDSScanner(): Boolean { // true if scanner is SDS100 or SDS200, false if not
         if (model.contains("SDS")) {
             return true
         } else {
@@ -200,6 +204,7 @@ class viewModel : ViewModel() {
                     if (curVol < 15) {
                         var newVol = curVol + 1
                         keyPress = "VOL," + newVol.toString()
+                        Log.d("VOLUME", "up")
                     }
                 }
 
@@ -208,6 +213,7 @@ class viewModel : ViewModel() {
                     if (curVol > 0) {
                         var newVol = curVol - 1
                         keyPress = "VOL," + newVol.toString()
+                        Log.d("VOLUME", "down")
                     }
                 }
 
@@ -232,6 +238,31 @@ class viewModel : ViewModel() {
         }
     }
 
+    fun checkDisplayLineData(num: Int, contents: String, contains:Boolean = false): Boolean {
+        if (displayLines.size > num) {
+            if (!contains) { //looking for an exact match only
+                if (displayLines[num] == contents) {
+                    return true
+                } else {
+                    return false
+                }
+            } else if (displayLines[num].contains(contents)) { //looking to see if it contains the string
+                return true
+            } else {
+                return false
+            }
+        } else {
+            return false
+        }
+    }
+
+    fun getDisplayLineData(num: Int): String {
+        if (displayLines.size > num) {
+            return displayLines[num]
+        } else {
+            return ""
+        }
+    }
     fun getRSSI(): String {
         try {
             var rssiString = ""
@@ -252,56 +283,6 @@ class viewModel : ViewModel() {
 
     fun updateDisplayData() {
 
-        /*
-        //todo: remove this?
-        if ("USB Cable Detected" in displayLines[6]) {
-            pressButton("dot")
-            displayLines[6] = ""
-        }
-        */
-
-        //system hold
-        if (systemHold == "On") {
-            systemTextColor = BACKGROUNDCOLOR
-            systemBackColor = defaultSystemTextColor
-        } else {
-            systemTextColor = defaultSystemTextColor
-            systemBackColor = BACKGROUNDCOLOR
-        }
-
-        //department hold
-        if (departmentHold == "On") {
-            departmentTextColor = BACKGROUNDCOLOR
-            deptBackColor = defaultDeptTextColor
-        } else {
-            departmentTextColor = defaultDeptTextColor
-            deptBackColor = BACKGROUNDCOLOR
-        }
-
-        //channel hold
-        if (tgidHold == "On" || convFrequencyHold == "On") {
-            channelTextColor = BACKGROUNDCOLOR
-            channelBackColor = defaultChanTextColor
-        } else {
-            channelTextColor = defaultChanTextColor
-            channelBackColor = BACKGROUNDCOLOR
-        }
-
-        //search hold
-        if (searchScreen && srchFreqHold == "On") { //search hold
-            channelTextColor = BACKGROUNDCOLOR
-            channelBackColor = defaultChanTextColor
-            holdButtonText = "Resume"
-        } else if (closeCallHit && srchFreqHold == "On") { //close call hold
-            channelTextColor = BACKGROUNDCOLOR
-            channelBackColor = defaultChanTextColor
-            holdButtonText = "Release"
-        } else {
-            channelTextColor = defaultChanTextColor
-            channelBackColor = BACKGROUNDCOLOR
-            holdButtonText = "Hold"
-        }
-
         when (scannerInfoV_screen) {
             "close_call" -> {
                 closeCallHit = true
@@ -315,6 +296,40 @@ class viewModel : ViewModel() {
                 closeCallHit = false
                 searchScreen = false
                 textDisplayWeight = .85f
+            }
+        }
+
+        when {
+            systemHold == "On" -> {
+                systemTextColor = BACKGROUNDCOLOR
+                systemBackColor = defaultSystemTextColor
+            }
+            departmentHold == "On" -> {
+                departmentTextColor = BACKGROUNDCOLOR
+                deptBackColor = defaultDeptTextColor
+            }
+            tgidHold == "On" || convFrequencyHold == "On" -> {
+                channelTextColor = BACKGROUNDCOLOR
+                channelBackColor = defaultChanTextColor
+            }
+            searchScreen && srchFreqHold == "On" -> {
+                channelTextColor = BACKGROUNDCOLOR
+                channelBackColor = defaultChanTextColor
+                holdButtonText = "Resume"
+            }
+            closeCallHit && srchFreqHold == "On" -> {
+                channelTextColor = BACKGROUNDCOLOR
+                channelBackColor = defaultChanTextColor
+                holdButtonText = "Release"
+            }
+            else -> {
+                systemTextColor = defaultSystemTextColor
+                systemBackColor = BACKGROUNDCOLOR
+                departmentTextColor = defaultDeptTextColor
+                deptBackColor = BACKGROUNDCOLOR
+                channelTextColor = defaultChanTextColor
+                channelBackColor = BACKGROUNDCOLOR
+                holdButtonText = "Hold"
             }
         }
 
@@ -336,35 +351,28 @@ class viewModel : ViewModel() {
         when {
             closeCallHit -> displayQuickKeyStatus1 = ""
             searchScreen -> displayQuickKeyStatus1 = "Search"
-            isSDSScanner() -> displayQuickKeyStatus1 = displayLines[4].take(13).trim()
-            !(isSDSScanner()) -> displayQuickKeyStatus1 = displayLines[2].take(13).trim()
+            isSDSScanner() -> displayQuickKeyStatus1 = getDisplayLineData(4).take(13).trim()
+            !(isSDSScanner()) -> displayQuickKeyStatus1 = getDisplayLineData(2).take(13).trim()
             else -> displayQuickKeyStatus1 = ""
         }
 
         //Quick key status field 2
-        try {
-            when {
-                closeCallHit -> displayQuickKeyStatus2 = ""
-                isSDSScanner() -> displayQuickKeyStatus2 = displayLines[6].take(13).trim()
-                !(isSDSScanner()) -> displayQuickKeyStatus2 = displayLines[4].take(13).trim()
-                else -> displayQuickKeyStatus2 = ""
-            }
-        } catch (e: Exception) {
-            println(e)
-            // rare exception here when STS result only has 4 entries during search
+        when {
+            closeCallHit -> displayQuickKeyStatus2 = ""
+
+            (isSDSScanner() && searchScreen) -> displayQuickKeyStatus2 = getDisplayLineData(6).take(13).trimEnd()
+            (!(isSDSScanner()) && searchScreen) -> displayQuickKeyStatus2 = getDisplayLineData(4).take(13).trimEnd()
+
+            isSDSScanner() -> displayQuickKeyStatus2 = getDisplayLineData(6).take(13).trim()
+            !(isSDSScanner()) -> displayQuickKeyStatus2 = getDisplayLineData(4).take(13).trim()
+            else -> displayQuickKeyStatus2 = ""
         }
 
         //Quick key status field 3
-        try {
-            when {
-                closeCallHit -> displayQuickKeyStatus3 = ""
-                isSDSScanner() -> displayQuickKeyStatus3 = displayLines[8].take(13).trim()
-                else -> displayQuickKeyStatus3 = ""
-            }
-        } catch (e: Exception) {
-            println(e)
-            // rare exception here when STS result only has 4 entries during search
-            // not sure if we are missing responses or the scanner is not sending them
+        when {
+            closeCallHit -> displayQuickKeyStatus3 = ""
+            isSDSScanner() -> displayQuickKeyStatus3 = getDisplayLineData(8).take(13).trim()
+            else -> displayQuickKeyStatus3 = ""
         }
 
         //volume
@@ -377,6 +385,8 @@ class viewModel : ViewModel() {
             lostConnection -> displayHeader1 = "Lost Connection"
             closeCallHit -> displayHeader1 = "Close Call"
             searchScreen -> displayHeader1 = "Searching"
+            checkDisplayLineData(19, "Nothing to", contains = true) ->
+                displayHeader1 = "Nothing to Scan"
             else -> displayHeader1 = systemName
         }
 
@@ -437,6 +447,8 @@ class viewModel : ViewModel() {
 
         //Footer 6 (P25 Trunk)
         when {
+            searchScreen -> displayFooter6 = ""
+            closeCallHit -> displayFooter6 = ""
             (systemSystemType == "P25 Trunk") -> displayFooter6 = systemSystemType
             else -> displayFooter6 = ""
         }
@@ -467,5 +479,31 @@ class viewModel : ViewModel() {
                 displayLongitude = ""
             }
         }
+
+        if (dualWatchCC == "DND") {
+            closeCallString = "CC:DND"
+        } else if (dualWatchCC == "Priority") {
+            closeCallString = "CC:Pri"
+        } else {
+            closeCallString = ""
+        }
+
+        // This will stop sending commands to the scanner when it is not responding
+        // to try to prevent button lag
+        var currentTime: Long = System.currentTimeMillis()
+        if ((currentTime - lastResponseTime) > 1000) {
+            clearToSend = false
+            if (clearToSendWatchdogTimer == 0L) {
+                clearToSendWatchdogTimer = currentTime
+            }
+        } else {
+            clearToSend = true
+            clearToSendWatchdogTimer = 0L
+        }
+        if ((currentTime - clearToSendWatchdogTimer) > 2500) {
+            clearToSend = true
+            clearToSendWatchdogTimer = 0L
+        }
+
     }
 }

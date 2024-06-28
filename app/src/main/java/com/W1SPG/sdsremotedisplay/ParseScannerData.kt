@@ -20,7 +20,7 @@ class ParseScannerData(var vm: viewModel) {
                 } else { //non xml line
                     messageType = message.take(3)
                 }
-                Log.d("Type of Response", messageType)
+                //Log.d("Type of Response", messageType)
 
                 when (messageType) {
                     "<ScannerInfo" -> {
@@ -113,14 +113,14 @@ class ParseScannerData(var vm: viewModel) {
 
                     "<DualWatch" -> {
                         vm.dualWatchPRI = GSI_FindItem(message, "PRI")
-                        vm.dualWatchCC = GSI_FindItem(message, "CC")
+                        vm.dualWatchCC = GSI_FindItem(message, "CC", previousValue = vm.dualWatchCC)
                         vm.dualWatchWX = GSI_FindItem(message, "WX")
                     }
 
                     "<Property" -> {
                         vm.propertyF = GSI_FindItem(message, "F")
-                        vm.propertyVOL = GSI_FindItem(message, "VOL")
-                        vm.propertySQL = GSI_FindItem(message, "SQL")
+                        vm.propertyVOL = GSI_FindItem(message, "VOL", previousValue = vm.propertyVOL)
+                        vm.propertySQL = GSI_FindItem(message, "SQL", previousValue = vm.propertySQL)
                         vm.propertySig = GSI_FindItem(message, "Sig")
                         vm.propertyAtt = GSI_FindItem(message, "Att")
                         vm.propertyRec = GSI_FindItem(message, "Rec")
@@ -181,7 +181,7 @@ class ParseScannerData(var vm: viewModel) {
                     }
 
                     else -> {
-                        Log.d("Unkown Mes type", message)
+                        //Log.d("Unkown Mes type", message)
                     }
 
                 }
@@ -191,14 +191,18 @@ class ParseScannerData(var vm: viewModel) {
         }
     }
 
-    private fun GSI_FindItem(textLine: String, name: String, beginIndex: Int = 0): String {
+    private fun GSI_FindItem(textLine: String, name: String, beginIndex: Int = 0, previousValue: String = ""): String {
         if ( textLine.substring(beginIndex).contains(" " + name) ) {
             val itemName = name + "=\""
             val start = textLine.indexOf(itemName, beginIndex) + itemName.length
+            if (start == itemName.length - 1) { //not found
+                return previousValue
+            }
             val end = textLine.indexOf("\"", start)
             var result = textLine.substring(start, end)
 
             result = result.replace("&amp;", "&")
+            result = result.replace("&apos", "'")
             return result
         } else {
             return ""
