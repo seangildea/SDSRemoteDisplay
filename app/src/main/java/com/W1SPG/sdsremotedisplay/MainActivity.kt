@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.content.res.Configuration
+import android.content.res.Resources
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbManager
@@ -17,12 +19,13 @@ import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.felhr.usbserial.UsbSerialDevice
 import com.felhr.usbserial.UsbSerialInterface.DATA_BITS_8
-import com.felhr.usbserial.UsbSerialInterface.FLOW_CONTROL_OFF
+import com.felhr.usbserial.UsbSerialInterface.FLOW_CONTROL_XON_XOFF
 import com.felhr.usbserial.UsbSerialInterface.PARITY_NONE
 import com.felhr.usbserial.UsbSerialInterface.STOP_BITS_1
 import com.felhr.usbserial.UsbSerialInterface.UsbReadCallback
@@ -51,7 +54,7 @@ var longitude: Double = 0.0
 val displayTimer = Timer()
 val gpsTimer = Timer()
 
-
+var isPortraitMode: Boolean = true
 
 class MainActivity : androidx.activity.ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,7 +70,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
         registerReceiver(BroadcastReceiver, filter, RECEIVER_EXPORTED)
         setContent {
             KeepScreenOn()
-            Display()
+            MyScreen()
         }
     }
 
@@ -148,7 +151,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
     private fun getNMEASentence(): String {
         locationPermissionGranted = checkLocationPermission()
         if (locationPermissionGranted) {
-            Log.d("GPS Enabled", "GPS Enabled")
+            //Log.d("GPS Enabled", "GPS Enabled")
             var lat = locationDDtoDDm(latitude,false)
             var long = locationDDtoDDm(longitude, true)
 
@@ -343,7 +346,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
 
                 var lastChar: String = usbRxData.takeLast(1)
                 if (lastChar == "\r") { //concatenate until last char is \r
-                    Log.d("Rx:", rxData)
+                    //Log.d("Rx:", rxData)
                     if (rxData != "") {
                         sdsData.decodeResponse(rxData)
                     }
@@ -373,11 +376,11 @@ class MainActivity : androidx.activity.ComponentActivity() {
                     m_serial = UsbSerialDevice.createUsbSerialDevice(m_device, m_connection)
                     if (m_serial != null) {
                         if (m_serial!!.open()) {
-                            m_serial!!.setBaudRate(115200)
+                            m_serial!!.setBaudRate(9600)
                             m_serial!!.setDataBits(DATA_BITS_8)
                             m_serial!!.setStopBits(STOP_BITS_1)
                             m_serial!!.setParity(PARITY_NONE)
-                            m_serial!!.setFlowControl(FLOW_CONTROL_OFF)
+                            m_serial!!.setFlowControl(FLOW_CONTROL_XON_XOFF)
                             m_serial!!.read(mCallback)
                             connectedToScanner = true
                         }
@@ -401,5 +404,24 @@ class MainActivity : androidx.activity.ComponentActivity() {
                 currentView.keepScreenOn = false
             }
         }
+    }
+
+    @Composable
+    fun HandleOrientationChanges() {
+        val configuration = LocalConfiguration.current
+        val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        if (isLandscape) {
+            HDisplay()
+            isPortraitMode = false
+        } else {
+            Display()
+            isPortraitMode = true
+        }
+    }
+
+    @Composable
+    fun MyScreen() {
+        Display()
+        HandleOrientationChanges()
     }
 }

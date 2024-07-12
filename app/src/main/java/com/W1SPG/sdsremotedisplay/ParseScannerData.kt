@@ -171,7 +171,7 @@ class ParseScannerData(var vm: viewModel) {
                     }
 
                     "STS" -> {
-                        vm.displayLines = message.split(",").toTypedArray()
+                        vm.stsLines = message.split(",").toTypedArray()
                     }
 
                     "PWR" -> {

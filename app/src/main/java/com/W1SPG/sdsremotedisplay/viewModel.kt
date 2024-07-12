@@ -5,6 +5,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 
 class viewModel : ViewModel() {
@@ -35,7 +38,7 @@ class viewModel : ViewModel() {
     var longitude: String = ""
     var range: String = ""
 
-    var displayLines = Array<String>(50) { "" }
+    var stsLines by mutableStateOf(Array<String>(50) { "" })
 
     var scannerInfoMode: String = ""
     var scannerInfoV_screen: String = ""
@@ -166,6 +169,37 @@ class viewModel : ViewModel() {
     var lastResponseTime: Long = 0
     var clearToSendWatchdogTimer: Long = 0
 
+    var displayLinesLength:Int by mutableStateOf(0)
+    val BIGFONT = 30.sp
+    val SMALLFONT = 15.sp
+    val X36BIGFONT =  40.sp
+    val X36SMALLFONT = 20.sp
+
+
+    var HDisplayLine1 by mutableStateOf("")
+    var HDisplayLine2 by mutableStateOf("")
+    var HDisplayLine3 by mutableStateOf("")
+    var HDisplayLine4 by mutableStateOf("")
+    var HDisplayLine5 by mutableStateOf("")
+    var HDisplayLine6 by mutableStateOf("")
+    var HDisplayLine7 by mutableStateOf("")
+    var HDisplayLine8 by mutableStateOf("")
+    var HDisplayLine9 by mutableStateOf("")
+    var HDisplayLine10 by mutableStateOf("")
+    var HDisplayLine11 by mutableStateOf("")
+    var HDisplayLine12 by mutableStateOf("")
+    var HDisplayLine13 by mutableStateOf("")
+    var HDisplayLine14 by mutableStateOf("")
+    var HDisplayLine15 by mutableStateOf("")
+    var HDisplayLine16 by mutableStateOf("")
+    var HDisplayLine17 by mutableStateOf("")
+
+    var firstButton by mutableStateOf("")
+    var secondButton by mutableStateOf("")
+    var thirdButton by mutableStateOf("")
+    var highlightArray by mutableStateOf(Array<Boolean>(20) { false })
+    var colorArray by mutableStateOf(Array<Color>(20) { WHITE })
+
     fun isTrunk(): Boolean { // true if channel is trunked, false if conventional
         if (scannerInfoV_screen == "trunk_scan") {
             return true
@@ -232,21 +266,22 @@ class viewModel : ViewModel() {
                         keyPress = "SQL," + newSQ.toString()
                     }
                 }
+                else -> keyPress = "KEY,$button,P"
             }
         } catch (e: Exception) {
             //println("Error: ${e.message}")
         }
     }
 
-    fun checkDisplayLineData(num: Int, contents: String, contains:Boolean = false): Boolean {
-        if (displayLines.size > num) {
+    fun checkSTSLineData(num: Int, contents: String, contains:Boolean = false): Boolean {
+        if (stsLines.size > num) {
             if (!contains) { //looking for an exact match only
-                if (displayLines[num] == contents) {
+                if (stsLines[num] == contents) {
                     return true
                 } else {
                     return false
                 }
-            } else if (displayLines[num].contains(contents)) { //looking to see if it contains the string
+            } else if (stsLines[num].contains(contents)) { //looking to see if it contains the string
                 return true
             } else {
                 return false
@@ -256,13 +291,29 @@ class viewModel : ViewModel() {
         }
     }
 
-    fun getDisplayLineData(num: Int): String {
-        if (displayLines.size > num) {
-            return displayLines[num]
+    fun getSTSLineData(num: Int): String {
+        if (stsLines.size > num) {
+            var text = unidenFontConversion(stsLines[num])
+            return text
         } else {
             return ""
         }
     }
+
+    fun unidenFontConversion(line: String): String {
+        var byteArray = Array<Int>(100) { 0}
+        var count = 1
+        for (char in line) {
+            byteArray[count] = char.toInt()
+            count++
+        }
+        //if (byteLine.contains("x0ex0fx0c")) { // FM
+            //line.replace("x0ex0fx0c", "FM")
+        //}
+        println(byteArray)
+        return line
+    }
+
     fun getRSSI(): String {
         try {
             var rssiString = ""
@@ -281,213 +332,39 @@ class viewModel : ViewModel() {
         }
     }
 
+    fun getFontSize(num: Int): TextUnit {
+        try {
+            val isSDS = vm.isSDSScanner()
+            var fontData = getSTSLineData(1)
+            var size = fontData.substring(num - 1, num)
+            when {
+                (num - 1) > fontData.length && isSDS -> return SMALLFONT
+                (num - 1) > fontData.length && !isSDS -> return X36SMALLFONT
+                size == "0" && isSDS -> return SMALLFONT
+                size == "0" && !isSDS -> return X36SMALLFONT
+                size == "1" && isSDS -> return BIGFONT
+                size == "1" && !isSDS -> return X36BIGFONT
+                else -> return SMALLFONT
+            }
+        } catch (e: Exception) {
+            println(e)
+            return SMALLFONT
+        }
+    }
+
+    fun getHighLightedStaus() {
+        var data: String
+        for (num in 1..10) {
+            data = getSTSLineData((num * 2) + 1)
+            if (data.contains("*")) {
+                highlightArray[num] = true
+            } else {
+                highlightArray[num] = false
+            }
+        }
+    }
+
     fun updateDisplayData() {
-
-        when (scannerInfoV_screen) {
-            "close_call" -> {
-                closeCallHit = true
-                textDisplayWeight = .75f
-            }
-            "custom_search" -> {
-                searchScreen = true
-                textDisplayWeight = .75f
-            }
-            else -> {
-                closeCallHit = false
-                searchScreen = false
-                textDisplayWeight = .85f
-            }
-        }
-
-        when {
-            systemHold == "On" -> {
-                systemTextColor = BACKGROUNDCOLOR
-                systemBackColor = defaultSystemTextColor
-            }
-            departmentHold == "On" -> {
-                departmentTextColor = BACKGROUNDCOLOR
-                deptBackColor = defaultDeptTextColor
-            }
-            tgidHold == "On" || convFrequencyHold == "On" -> {
-                channelTextColor = BACKGROUNDCOLOR
-                channelBackColor = defaultChanTextColor
-            }
-            searchScreen && srchFreqHold == "On" -> {
-                channelTextColor = BACKGROUNDCOLOR
-                channelBackColor = defaultChanTextColor
-                holdButtonText = "Resume"
-            }
-            closeCallHit && srchFreqHold == "On" -> {
-                channelTextColor = BACKGROUNDCOLOR
-                channelBackColor = defaultChanTextColor
-                holdButtonText = "Release"
-            }
-            else -> {
-                systemTextColor = defaultSystemTextColor
-                systemBackColor = BACKGROUNDCOLOR
-                departmentTextColor = defaultDeptTextColor
-                deptBackColor = BACKGROUNDCOLOR
-                channelTextColor = defaultChanTextColor
-                channelBackColor = BACKGROUNDCOLOR
-                holdButtonText = "Hold"
-            }
-        }
-
-        //LED
-        when (propertyA_led) {
-            //Blue, Red, Magenta, Green, Cyan, Yellow, White, Off
-            "Blue" -> displayLED = BLUE
-            "Red" -> displayLED = RED
-            "Magenta" -> displayLED = MAGENTA
-            "Green" -> displayLED = GREEN
-            "Cyan" -> displayLED = CYAN
-            "Yellow" -> displayLED = YELLOW
-            "White" -> displayLED = WHITE
-            "Off" -> displayLED = backGroundColor
-            else -> displayLED = backGroundColor
-        }
-
-        //QuickKeyStatus field 1
-        when {
-            closeCallHit -> displayQuickKeyStatus1 = ""
-            searchScreen -> displayQuickKeyStatus1 = "Search"
-            isSDSScanner() -> displayQuickKeyStatus1 = getDisplayLineData(4).take(13).trim()
-            !(isSDSScanner()) -> displayQuickKeyStatus1 = getDisplayLineData(2).take(13).trim()
-            else -> displayQuickKeyStatus1 = ""
-        }
-
-        //Quick key status field 2
-        when {
-            closeCallHit -> displayQuickKeyStatus2 = ""
-
-            (isSDSScanner() && searchScreen) -> displayQuickKeyStatus2 = getDisplayLineData(6).take(13).trimEnd()
-            (!(isSDSScanner()) && searchScreen) -> displayQuickKeyStatus2 = getDisplayLineData(4).take(13).trimEnd()
-
-            isSDSScanner() -> displayQuickKeyStatus2 = getDisplayLineData(6).take(13).trim()
-            !(isSDSScanner()) -> displayQuickKeyStatus2 = getDisplayLineData(4).take(13).trim()
-            else -> displayQuickKeyStatus2 = ""
-        }
-
-        //Quick key status field 3
-        when {
-            closeCallHit -> displayQuickKeyStatus3 = ""
-            isSDSScanner() -> displayQuickKeyStatus3 = getDisplayLineData(8).take(13).trim()
-            else -> displayQuickKeyStatus3 = ""
-        }
-
-        //volume
-        displayVolume = "Vol: " + propertyVOL
-        //squelch
-        displaySquelch = "SQ: " + propertySQL
-
-        //Header 1 display (system name / "Close call" label / "Searching" label)
-        when {
-            lostConnection -> displayHeader1 = "Lost Connection"
-            closeCallHit -> displayHeader1 = "Close Call"
-            searchScreen -> displayHeader1 = "Searching"
-            checkDisplayLineData(19, "Nothing to", contains = true) ->
-                displayHeader1 = "Nothing to Scan"
-            else -> displayHeader1 = systemName
-        }
-
-        //Header 2 display (dept name / "Scanning" label / search bank name / close call freq)
-        when {
-            lostConnection -> displayHeader2 = ""
-            searchScreen -> displayHeader2 = searchBanksName
-            closeCallHit -> displayHeader2 = ""
-            (departmentName == "") && (systemName != "Not Connected") -> displayHeader2 = "Scanning..."
-            else -> displayHeader2 = departmentName
-        }
-
-        //Header 3 display ( freq name / search freq )
-        when {
-            lostConnection -> displayHeader3 = ""
-            searchScreen -> displayHeader3 = srchFreqFreq
-            closeCallHit -> displayHeader3 =  srchFreqFreq
-            else -> displayHeader3 = convFrequencyName
-        }
-
-        //footer 1 (svcType /  current search mode / close call hit mode)
-        when {
-            closeCallHit -> displayFooter1 = srchFreqMode
-            searchScreen -> displayFooter1 = srchFreqMode
-            else -> displayFooter1 = convFrequencySvcType
-        }
-
-        //Footer 2 (Frequency / Lower search range)
-        when {
-            searchScreen -> displayFooter2 = "Lower: " + searchRangeLower
-            closeCallHit -> displayFooter2 = getRSSI()
-            else -> displayFooter2 = convFrequencyFreq
-        }
-
-        //Footer 3 (Mode/UID Name/upper search rannge)
-        when {
-            searchScreen -> displayFooter3 = "Upper: " + searchRangeUpper
-            closeCallHit -> displayFooter3 = ""
-            (isTrunk() && unitU_Id != "") -> displayFooter3 = unitIDName
-            else -> displayFooter3 = convFrequencyMod
-        }
-
-        //Footer 4 (Site)
-        when {
-            searchScreen -> displayFooter4 = "Step: " + searchRangeStep
-            closeCallHit -> displayFooter4 = ""
-            isTrunk() -> displayFooter4 = siteName
-            else -> displayFooter4 = ""
-        }
-
-        //Footer 5 (TGID ID)
-        when {
-            searchScreen -> displayFooter5 = getRSSI()
-            closeCallHit -> displayFooter5 = ""
-            isTrunk() -> displayFooter5 = tgidTGID
-            else -> displayFooter5 = ""
-        }
-
-        //Footer 6 (P25 Trunk)
-        when {
-            searchScreen -> displayFooter6 = ""
-            closeCallHit -> displayFooter6 = ""
-            (systemSystemType == "P25 Trunk") -> displayFooter6 = systemSystemType
-            else -> displayFooter6 = ""
-        }
-
-        //Footer 7 (RSSI)
-        when {
-            (systemName == "Not Connected") -> displayFooter7 = ""
-            isSDSScanner() &&  !searchScreen -> displayFooter7 = getRSSI()
-            else -> displayFooter7 = ""
-        }
-
-        //Lat - Long
-        when {
-            closeCallHit -> {
-                displayLatitude = ""
-                displayLongitude = ""
-            }
-            searchScreen -> {
-                displayLatitude = ""
-                displayLongitude = ""
-            }
-            locationPermissionGranted -> {
-                displayLatitude = "Latitude: " + latitude
-                displayLongitude = "Longitude: " + longitude
-            }
-            else -> {
-                displayLatitude = ""
-                displayLongitude = ""
-            }
-        }
-
-        if (dualWatchCC == "DND") {
-            closeCallString = "CC:DND"
-        } else if (dualWatchCC == "Priority") {
-            closeCallString = "CC:Pri"
-        } else {
-            closeCallString = ""
-        }
-
         // This will stop sending commands to the scanner when it is not responding
         // to try to prevent button lag
         var currentTime: Long = System.currentTimeMillis()
@@ -505,5 +382,311 @@ class viewModel : ViewModel() {
             clearToSendWatchdogTimer = 0L
         }
 
+        if (isPortraitMode) {
+            when (scannerInfoV_screen) {
+                "close_call" -> {
+                    closeCallHit = true
+                    textDisplayWeight = .75f
+                }
+
+                "custom_search" -> {
+                    searchScreen = true
+                    textDisplayWeight = .75f
+                }
+
+                else -> {
+                    closeCallHit = false
+                    searchScreen = false
+                    textDisplayWeight = .85f
+                }
+            }
+
+            when {
+                systemHold == "On" -> {
+                    systemTextColor = BACKGROUNDCOLOR
+                    systemBackColor = defaultSystemTextColor
+                }
+
+                departmentHold == "On" -> {
+                    departmentTextColor = BACKGROUNDCOLOR
+                    deptBackColor = defaultDeptTextColor
+                }
+
+                tgidHold == "On" || convFrequencyHold == "On" -> {
+                    channelTextColor = BACKGROUNDCOLOR
+                    channelBackColor = defaultChanTextColor
+                }
+
+                searchScreen && srchFreqHold == "On" -> {
+                    channelTextColor = BACKGROUNDCOLOR
+                    channelBackColor = defaultChanTextColor
+                    holdButtonText = "Resume"
+                }
+
+                closeCallHit && srchFreqHold == "On" -> {
+                    channelTextColor = BACKGROUNDCOLOR
+                    channelBackColor = defaultChanTextColor
+                    holdButtonText = "Release"
+                }
+
+                else -> {
+                    systemTextColor = defaultSystemTextColor
+                    systemBackColor = BACKGROUNDCOLOR
+                    departmentTextColor = defaultDeptTextColor
+                    deptBackColor = BACKGROUNDCOLOR
+                    channelTextColor = defaultChanTextColor
+                    channelBackColor = BACKGROUNDCOLOR
+                    holdButtonText = "Hold"
+                }
+            }
+
+            //LED
+            when (propertyA_led) {
+                //Blue, Red, Magenta, Green, Cyan, Yellow, White, Off
+                "Blue" -> displayLED = BLUE
+                "Red" -> displayLED = RED
+                "Magenta" -> displayLED = MAGENTA
+                "Green" -> displayLED = GREEN
+                "Cyan" -> displayLED = CYAN
+                "Yellow" -> displayLED = YELLOW
+                "White" -> displayLED = WHITE
+                "Off" -> displayLED = backGroundColor
+                else -> displayLED = backGroundColor
+            }
+
+            //QuickKeyStatus field 1
+            when {
+                closeCallHit -> displayQuickKeyStatus1 = ""
+                searchScreen -> displayQuickKeyStatus1 = "Search"
+                isSDSScanner() -> displayQuickKeyStatus1 = getSTSLineData(4).take(13).trim()
+                !(isSDSScanner()) -> displayQuickKeyStatus1 = getSTSLineData(2).take(13).trim()
+                else -> displayQuickKeyStatus1 = ""
+            }
+
+            //Quick key status field 2
+            when {
+                closeCallHit -> displayQuickKeyStatus2 = ""
+
+                (isSDSScanner() && searchScreen) -> displayQuickKeyStatus2 =
+                    getSTSLineData(6).take(13).trimEnd()
+
+                (!(isSDSScanner()) && searchScreen) -> displayQuickKeyStatus2 =
+                    getSTSLineData(4).take(13).trimEnd()
+
+                isSDSScanner() -> displayQuickKeyStatus2 = getSTSLineData(6).take(13).trim()
+                !(isSDSScanner()) -> displayQuickKeyStatus2 = getSTSLineData(4).take(13).trim()
+                else -> displayQuickKeyStatus2 = ""
+            }
+
+            //Quick key status field 3
+            when {
+                closeCallHit -> displayQuickKeyStatus3 = ""
+                isSDSScanner() -> displayQuickKeyStatus3 = getSTSLineData(8).take(13).trim()
+                else -> displayQuickKeyStatus3 = ""
+            }
+
+            //volume
+            displayVolume = "Vol: " + propertyVOL
+            //squelch
+            displaySquelch = "SQ: " + propertySQL
+
+            //Header 1 display (system name / "Close call" label / "Searching" label)
+            when {
+                lostConnection -> displayHeader1 = "Lost Connection"
+                closeCallHit -> displayHeader1 = "Close Call"
+                searchScreen -> displayHeader1 = "Searching"
+                checkSTSLineData(19, "Nothing to", contains = true) ->
+                    displayHeader1 = "Nothing to Scan"
+
+                else -> displayHeader1 = systemName
+            }
+
+            //Header 2 display (dept name / "Scanning" label / search bank name / close call freq)
+            when {
+                lostConnection -> displayHeader2 = ""
+                searchScreen -> displayHeader2 = searchBanksName
+                closeCallHit -> displayHeader2 = ""
+                (departmentName == "") && (systemName != "Not Connected") -> displayHeader2 =
+                    "Scanning..."
+
+                else -> displayHeader2 = departmentName
+            }
+
+            //Header 3 display ( freq name / search freq )
+            when {
+                lostConnection -> displayHeader3 = ""
+                searchScreen -> displayHeader3 = srchFreqFreq
+                closeCallHit -> displayHeader3 = srchFreqFreq
+                else -> displayHeader3 = convFrequencyName
+            }
+
+            //footer 1 (svcType /  current search mode / close call hit mode)
+            when {
+                closeCallHit -> displayFooter1 = srchFreqMode
+                searchScreen -> displayFooter1 = srchFreqMode
+                else -> displayFooter1 = convFrequencySvcType
+            }
+
+            //Footer 2 (Frequency / Lower search range)
+            when {
+                searchScreen -> displayFooter2 = "Lower: " + searchRangeLower
+                closeCallHit -> displayFooter2 = getRSSI()
+                else -> displayFooter2 = convFrequencyFreq
+            }
+
+            //Footer 3 (Mode/UID Name/upper search rannge)
+            when {
+                searchScreen -> displayFooter3 = "Upper: " + searchRangeUpper
+                closeCallHit -> displayFooter3 = ""
+                (isTrunk() && unitU_Id != "") -> displayFooter3 = unitIDName
+                else -> displayFooter3 = convFrequencyMod
+            }
+
+            //Footer 4 (Site)
+            when {
+                searchScreen -> displayFooter4 = "Step: " + searchRangeStep
+                closeCallHit -> displayFooter4 = ""
+                isTrunk() -> displayFooter4 = siteName
+                else -> displayFooter4 = ""
+            }
+
+            //Footer 5 (TGID ID)
+            when {
+                searchScreen -> displayFooter5 = getRSSI()
+                closeCallHit -> displayFooter5 = ""
+                isTrunk() -> displayFooter5 = tgidTGID
+                else -> displayFooter5 = ""
+            }
+
+            //Footer 6 (P25 Trunk)
+            when {
+                searchScreen -> displayFooter6 = ""
+                closeCallHit -> displayFooter6 = ""
+                (systemSystemType == "P25 Trunk") -> displayFooter6 = systemSystemType
+                else -> displayFooter6 = ""
+            }
+
+            //Footer 7 (RSSI)
+            when {
+                (systemName == "Not Connected") -> displayFooter7 = ""
+                isSDSScanner() && !searchScreen -> displayFooter7 = getRSSI()
+                else -> displayFooter7 = ""
+            }
+
+            //Lat - Long
+            when {
+                closeCallHit -> {
+                    displayLatitude = ""
+                    displayLongitude = ""
+                }
+
+                searchScreen -> {
+                    displayLatitude = ""
+                    displayLongitude = ""
+                }
+
+                locationPermissionGranted -> {
+                    displayLatitude = "Latitude: " + latitude
+                    displayLongitude = "Longitude: " + longitude
+                }
+
+                else -> {
+                    displayLatitude = ""
+                    displayLongitude = ""
+                }
+            }
+
+            if (dualWatchCC == "DND") {
+                closeCallString = "CC:DND"
+            } else if (dualWatchCC == "Priority") {
+                closeCallString = "CC:Pri"
+            } else {
+                closeCallString = ""
+            }
+        } else { // Landscape mode
+            displayLinesLength = getSTSLineData(1).length
+            HDisplayLine1 = getSTSLineData(2)
+            HDisplayLine2 = getSTSLineData(4)
+            HDisplayLine3 = getSTSLineData(6)
+            HDisplayLine4 = getSTSLineData(8)
+            HDisplayLine5 = getSTSLineData(10)
+            HDisplayLine6 = getSTSLineData(12)
+            HDisplayLine7 = getSTSLineData(14)
+            HDisplayLine8 = getSTSLineData(16)
+            HDisplayLine9 = getSTSLineData(18)
+            HDisplayLine10 = getSTSLineData(20)
+            HDisplayLine11 = getSTSLineData(22)
+            HDisplayLine12 = getSTSLineData(24)
+            HDisplayLine13 = getSTSLineData(26)
+            HDisplayLine14 = getSTSLineData(28)
+            HDisplayLine15 = getSTSLineData(30)
+            HDisplayLine16 = getSTSLineData(32)
+            HDisplayLine17 = getSTSLineData(34)
+
+            var displayButtonTextArray = mutableListOf<String>()
+            var buttonData = mutableListOf<String>()
+            if (displayLinesLength == 17 ) {
+                displayButtonTextArray = HDisplayLine17.trim().split("  ").toMutableList()
+                HDisplayLine17 = ""
+                HDisplayLine16 = "" //remove uniden icon screen for now
+            } else if (displayLinesLength == 14) {
+                displayButtonTextArray = HDisplayLine14.trim().split("  ").toMutableList()
+                HDisplayLine14 = ""
+                HDisplayLine13 = "" //remove uniden icon screen for now
+            }
+            for (button in displayButtonTextArray) {
+                if (button != "") {
+                    buttonData.add(button)
+                }
+            }
+
+            try {
+                if (!buttonData[0].contains("x0")) {
+                    firstButton = buttonData[0].trim()
+                } else {
+                    firstButton = ""
+                }
+            } catch (e: Exception) {
+                firstButton = ""
+            }
+
+            try {
+                if (!buttonData[1].contains("x01")) {
+                    secondButton = buttonData[1].trim()
+                } else {
+                    secondButton = ""
+                }
+            } catch (e: Exception) {
+                secondButton = ""
+            }
+
+            try {
+                if (!buttonData[2].contains("x01")) {
+                    thirdButton = buttonData[2].trim()
+                } else {
+                    thirdButton = ""
+                }
+            } catch (e: Exception) {
+                thirdButton = ""
+            }
+            if (!vm.isSDSScanner()) {
+                firstButton = "System"
+                secondButton = "Dept"
+                thirdButton = "Channel"
+            }
+        }
+        getHighLightedStaus()
+
+        for (i in 1..(colorArray.size-1)) {
+            when {
+                scannerInfoV_screen == "menu_selection" -> colorArray[i] = WHITE
+                i < 5 || i == 16 -> colorArray[i] = WHITE
+                i > 4 && i < 7 -> colorArray[i] = defaultSystemTextColor
+                i > 6 && i < 9 -> colorArray[i] = defaultDeptTextColor
+                i > 7 && i < 12 -> colorArray[i] = defaultChanTextColor
+                else -> colorArray[i] = FOOTERTEXTCOLOR
+            }
+        }
     }
+
 }
