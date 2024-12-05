@@ -1,7 +1,7 @@
 # SDSRemoteDisplay
 
 SDSRemoteDisplay is an Android app to connect to specific models of Uniden scanners and display the data of what it is scanning.
-It will work with SDS200, SDS100, BCD536, and (with some limitations) BCD436.  The reason for the limitations on the 436 is I do not possess one to develop/test with.
+It will work with SDS200, SDS100, BCD536, and BCD436.
 
 # Why
 
