@@ -1,14 +1,28 @@
 package com.W1SPG.sdsremotedisplay
 
 import android.util.Log
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
+import java.lang.reflect.Modifier
 
 class viewModel : ViewModel() {
 
@@ -37,6 +51,8 @@ class viewModel : ViewModel() {
     var latitude: String = ""
     var longitude: String = ""
     var range: String = ""
+
+    val scannerCommands = listOf("MDL", "GSI", "LCR", "STS", "PWR")
 
     var stsLines by mutableStateOf(Array<String>(50) { "" })
 
@@ -139,6 +155,7 @@ class viewModel : ViewModel() {
 
     var closeCallHit: Boolean = false
     var searchScreen: Boolean = false
+    var simpleMode: Boolean = false
 
     var displayLED: Color by mutableStateOf(backGroundColor)
     var displayQuickKeyStatus1: String by mutableStateOf("")
@@ -170,8 +187,8 @@ class viewModel : ViewModel() {
     var clearToSendWatchdogTimer: Long = 0
 
     var displayLinesLength:Int by mutableStateOf(0)
-    val BIGFONT = 30.sp
-    val SMALLFONT = 15.sp
+    val BIGFONT = 28.sp
+    val SMALLFONT = 14.sp
     val X36BIGFONT =  40.sp
     val X36SMALLFONT = 20.sp
 
@@ -193,11 +210,15 @@ class viewModel : ViewModel() {
     var HDisplayLine15 by mutableStateOf("")
     var HDisplayLine16 by mutableStateOf("")
     var HDisplayLine17 by mutableStateOf("")
+    var HDisplayLine18 by mutableStateOf("")
+    var HDisplayLine19 by mutableStateOf("")
+    var HDisplayLine20 by mutableStateOf("")
 
-    var firstButton by mutableStateOf("")
-    var secondButton by mutableStateOf("")
-    var thirdButton by mutableStateOf("")
-    var highlightArray by mutableStateOf(Array<Boolean>(20) { false })
+    var firstButton by mutableStateOf("System")
+    var secondButton by mutableStateOf("Dept")
+    var thirdButton by mutableStateOf("Channel")
+    var highlightArray by mutableStateOf (Array<Boolean>(20) { false })
+    var underlineArray by mutableStateOf(Array<Boolean>(20) { false })
     var colorArray by mutableStateOf(Array<Color>(20) { WHITE })
 
     fun isTrunk(): Boolean { // true if channel is trunked, false if conventional
@@ -209,7 +230,7 @@ class viewModel : ViewModel() {
     }
 
     fun isSDSScanner(): Boolean { // true if scanner is SDS100 or SDS200, false if not
-        if (model.contains("SDS")) {
+        if (model.contains("SDS") || model == "") {
             return true
         } else {
             return false
@@ -224,6 +245,8 @@ class viewModel : ViewModel() {
                 "department" -> keyPress = "KEY,B,P"
                 "channel" -> keyPress = "KEY,C,P"
                 "hold" -> keyPress = "KEY,C,P"
+                "serv" -> keyPress = "KEY,T,P"
+                "rang" -> keyPress = "KEY,R,P"
                 "toscan" -> if (isSDSScanner()) {
                     keyPress = "KEY,A,P"
                 } else {
@@ -293,25 +316,10 @@ class viewModel : ViewModel() {
 
     fun getSTSLineData(num: Int): String {
         if (stsLines.size > num) {
-            var text = unidenFontConversion(stsLines[num])
-            return text
+            return stsLines[num]
         } else {
             return ""
         }
-    }
-
-    fun unidenFontConversion(line: String): String {
-        var byteArray = Array<Int>(100) { 0}
-        var count = 1
-        for (char in line) {
-            byteArray[count] = char.toInt()
-            count++
-        }
-        //if (byteLine.contains("x0ex0fx0c")) { // FM
-            //line.replace("x0ex0fx0c", "FM")
-        //}
-        println(byteArray)
-        return line
     }
 
     fun getRSSI(): String {
@@ -327,7 +335,7 @@ class viewModel : ViewModel() {
             }
             return "RSSI:" + rssiString + " dBm"
         } catch (e: Exception) {
-            //println("Error: ${e.message}")
+            println("Error: ${e.message}")
             return ""
         }
     }
@@ -347,12 +355,12 @@ class viewModel : ViewModel() {
                 else -> return SMALLFONT
             }
         } catch (e: Exception) {
-            println(e)
+            //println(e)
             return SMALLFONT
         }
     }
 
-    fun getHighLightedStaus() {
+    fun getHighLightedStatus() {
         var data: String
         for (num in 1..10) {
             data = getSTSLineData((num * 2) + 1)
@@ -362,6 +370,47 @@ class viewModel : ViewModel() {
                 highlightArray[num] = false
             }
         }
+        // Needed to get jetpack to recompose
+        highlightArray = highlightArray.copyOf()
+    }
+
+    fun getUnderlinedStatus() {
+        var data: String
+        for (num in 1..16) {
+            data = getSTSLineData((num * 2) + 1)
+            if (data.contains("_")) {
+                underlineArray[num] = true
+            } else {
+                underlineArray[num] = false
+            }
+        }
+        // Needed to get jetpack to recompose
+        underlineArray = underlineArray.copyOf()
+    }
+
+    fun buildButtonText(num: String, subText: String): AnnotatedString
+    {
+        var butText = buildAnnotatedString {
+            append(num)
+            withStyle(style = SpanStyle(fontSize = 8.sp)) {
+                append(" " + subText)
+            }
+        }
+        return butText
+    }
+
+    fun isSimpleMode() {
+        when {
+            scannerInfoV_screen == "trunk_scan" || scannerInfoV_screen == "conventional_scan" -> {
+                if (getSTSLineData(5).contains("_")
+                    && getSTSLineData(11).contains("_")
+                    && getSTSLineData(17).contains("_")) {
+                        simpleMode = true
+                } else {
+                    simpleMode = false
+                }
+            }
+        } // if not in scan mode, keep previous determined value
     }
 
     fun updateDisplayData() {
@@ -381,6 +430,8 @@ class viewModel : ViewModel() {
             clearToSend = true
             clearToSendWatchdogTimer = 0L
         }
+
+        isSimpleMode()
 
         if (isPortraitMode) {
             when (scannerInfoV_screen) {
@@ -456,6 +507,7 @@ class viewModel : ViewModel() {
 
             //QuickKeyStatus field 1
             when {
+                simpleMode -> displayQuickKeyStatus1 = ""
                 closeCallHit -> displayQuickKeyStatus1 = ""
                 searchScreen -> displayQuickKeyStatus1 = "Search"
                 isSDSScanner() -> displayQuickKeyStatus1 = getSTSLineData(4).take(13).trim()
@@ -465,6 +517,7 @@ class viewModel : ViewModel() {
 
             //Quick key status field 2
             when {
+                simpleMode -> displayQuickKeyStatus2 = ""
                 closeCallHit -> displayQuickKeyStatus2 = ""
 
                 (isSDSScanner() && searchScreen) -> displayQuickKeyStatus2 =
@@ -480,6 +533,7 @@ class viewModel : ViewModel() {
 
             //Quick key status field 3
             when {
+                simpleMode -> displayQuickKeyStatus3= ""
                 closeCallHit -> displayQuickKeyStatus3 = ""
                 isSDSScanner() -> displayQuickKeyStatus3 = getSTSLineData(8).take(13).trim()
                 else -> displayQuickKeyStatus3 = ""
@@ -604,6 +658,9 @@ class viewModel : ViewModel() {
                 closeCallString = ""
             }
         } else { // Landscape mode
+            //======================================================================================
+            //======================================================================================
+
             displayLinesLength = getSTSLineData(1).length
             HDisplayLine1 = getSTSLineData(2)
             HDisplayLine2 = getSTSLineData(4)
@@ -622,17 +679,39 @@ class viewModel : ViewModel() {
             HDisplayLine15 = getSTSLineData(30)
             HDisplayLine16 = getSTSLineData(32)
             HDisplayLine17 = getSTSLineData(34)
+            HDisplayLine18 = getSTSLineData(36)
+            HDisplayLine19 = getSTSLineData(38)
+            HDisplayLine20 = getSTSLineData(40)
 
+            if (!connectedToScanner) {
+                displayLinesLength = 5
+                HDisplayLine1 = "111111" //force large font
+                HDisplayLine4 = "NO CONNECTION"
+            }
+
+            // remove uniden font and insert signal bars
+            if (!scannerInfoV_screen.contains("menu")) {
+                HDisplayLine1 = HDisplayLine1.replace("��", "")
+                //HDisplayLine1 = HDisplayLine1.dropLast(4) + buildSignalStrengthBars()
+            }
+
+            // function mode indicator
+            if (propertyF == "On") {
+                HDisplayLine1 = "FUNC" + HDisplayLine1
+            }
+
+            // get bottom button text
             var displayButtonTextArray = mutableListOf<String>()
             var buttonData = mutableListOf<String>()
             if (displayLinesLength == 17 ) {
                 displayButtonTextArray = HDisplayLine17.trim().split("  ").toMutableList()
                 HDisplayLine17 = ""
-                HDisplayLine16 = "" //remove uniden icon screen for now
             } else if (displayLinesLength == 14) {
                 displayButtonTextArray = HDisplayLine14.trim().split("  ").toMutableList()
                 HDisplayLine14 = ""
-                HDisplayLine13 = "" //remove uniden icon screen for now
+            } else if (displayLinesLength == 20) { //close call only mode
+                displayButtonTextArray = HDisplayLine20.trim().split("  ").toMutableList()
+                HDisplayLine20 = ""
             }
             for (button in displayButtonTextArray) {
                 if (button != "") {
@@ -675,18 +754,36 @@ class viewModel : ViewModel() {
                 thirdButton = "Channel"
             }
         }
-        getHighLightedStaus()
+        getHighLightedStatus()
+        getUnderlinedStatus()
 
         for (i in 1..(colorArray.size-1)) {
             when {
-                scannerInfoV_screen == "menu_selection" -> colorArray[i] = WHITE
-                i < 5 || i == 16 -> colorArray[i] = WHITE
-                i > 4 && i < 7 -> colorArray[i] = defaultSystemTextColor
-                i > 6 && i < 9 -> colorArray[i] = defaultDeptTextColor
-                i > 7 && i < 12 -> colorArray[i] = defaultChanTextColor
+                scannerInfoMode == "Menu tree" -> colorArray[i] = WHITE
+                !simpleMode -> {
+                    when {
+                        i < 5 || i == 16 -> colorArray[i] = WHITE
+                        i > 4 && i < 7 -> colorArray[i] = defaultSystemTextColor
+                        i > 6 && i < 9 -> colorArray[i] = defaultDeptTextColor
+                        i > 7 && i < 12 -> colorArray[i] = defaultChanTextColor
+                        else -> colorArray[i] = FOOTERTEXTCOLOR
+                    }
+                }
+                simpleMode -> {
+                    when {
+                        i < 3 || i == 13 -> colorArray[i] = WHITE
+                        i > 2 && i < 6 -> colorArray[i] = defaultSystemTextColor
+                        i > 5 && i < 9 -> colorArray[i] = defaultDeptTextColor
+                        i > 8 && i < 12 -> colorArray[i] = defaultChanTextColor
+                        else -> colorArray[i] = FOOTERTEXTCOLOR
+                    }
+                }
                 else -> colorArray[i] = FOOTERTEXTCOLOR
             }
+            // Needed to get Jetpack to recompose
+            colorArray = colorArray.copyOf()
         }
+
     }
 
 }

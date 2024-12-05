@@ -6,12 +6,48 @@ class ParseScannerData(var vm: viewModel) {
 
     fun decodeResponse(responseString: String) {
         try {
-            var messages = responseString.split("\r")
+            var messages = mutableListOf<String>()
+            var response = responseString
+
+            for (command in vm.scannerCommands) {
+
+                if (response.take(3) == command) {
+                    var endIndexes = mutableListOf<Int>()
+
+                    for (endCommand in vm.scannerCommands) {
+
+                        if (command != endCommand) {
+                            if (response.contains(endCommand)) {
+                                endIndexes.add(response.indexOf(endCommand))
+                            } else {
+                                continue
+                            }
+                        } else {
+                            continue
+                        }
+                    }
+                    var first: Int
+                    if (endIndexes.size == 0) {
+                        first = response.length
+                    } else {
+                        first = endIndexes.min() // find lowest value, which will be the next command
+                    }
+                    var scannerMess = response.substring(0, first)
+                    if (scannerMess.takeLast(1) == "\r") {
+                        scannerMess = scannerMess.substring(0, scannerMess.length - 1) //remove line feed
+                    }
+                    messages.add(scannerMess)
+                    response = response.substring(first, response.length)
+
+                }
+            }
+
             for (message in messages) {
-                var message = message.trimStart() //remove spaces from beginning
+                //message = message.trimStart() //remove spaces from beginning
                 //Log.d("Message: ", message)
                 var messageType: String = ""
 
+                /*
                 if (message.take(1) == "<") { //xml lines
                     if (message.contains(" ")) { //skip xml lines that do not contain a space
                         messageType =
@@ -21,135 +57,123 @@ class ParseScannerData(var vm: viewModel) {
                     messageType = message.take(3)
                 }
                 //Log.d("Type of Response", messageType)
+                 */
+                messageType = message.take(3)
 
                 when (messageType) {
-                    "<ScannerInfo" -> {
-                        vm.scannerInfoMode = GSI_FindItem(message, "Mode")
-                        vm.scannerInfoV_screen = GSI_FindItem(message, "V_Screen")
-                    }
+                    "GSI" -> {
+                        //val pattern2 = Regex("<([\\/\\w]+)(\\s+[^>]*)?\\/>")
+                        //val lines =
+                            //pattern2.findAll(responseString, 0).map { it.value }.toList()
+                        var lines = message.split(">")
+                        lines.forEach() {
+                            var line = it.trim()
+                            var end = line.indexOf(" ", 0)
+                            if (end > 0) {
+                                var prefix = line.substring(1, end)
+                                when (prefix) {
 
-                    "<MonitorList" -> {
-                        vm.monitorListName = GSI_FindItem(message, "Name")
-                        vm.monitorListIndex = GSI_FindItem(message, "Index")
-                        vm.monitorListListType = GSI_FindItem(message, "ListType")
-                        vm.monitorListQ_Key = GSI_FindItem(message, "Q_Key")
-                        vm.monitorListN_Tag = GSI_FindItem(message, "N_Tag")
-                        vm.monitorListDB_Counter = GSI_FindItem(message, "DB_Counter")
-                    }
+                                    "ScannerInfo" -> {
+                                        // preserve last value if it comes back blank
+                                        var mode = GSI_FindItem(message, "Mode")
+                                        if (mode != "") {
+                                            vm.scannerInfoMode = GSI_FindItem(message, "Mode")
+                                        }
+                                        var v_screen = GSI_FindItem(message, "V_Screen")
+                                        if (v_screen != "") {
+                                            vm.scannerInfoV_screen = GSI_FindItem(message, "V_Screen")
+                                        }
+                                    }
 
-                    "<System" -> {
-                        vm.systemName = GSI_FindItem(message, "Name")
-                        vm.systemIndex = GSI_FindItem(message, "Index")
-                        vm.systemAvoid = GSI_FindItem(message, "Avoid")
-                        vm.systemSystemType = GSI_FindItem(message, "SystemType")
-                        vm.systemQ_Key = GSI_FindItem(message, "Q_Key")
-                        vm.systemN_Tag = GSI_FindItem(message, "N_Tag")
-                        vm.systemHold = GSI_FindItem(message, "Hold")
-                    }
+                                    "MonitorList" -> {
+                                        vm.monitorListName = GSI_FindItem(it, "Name")
+                                        vm.monitorListIndex = GSI_FindItem(it, "Index")
+                                        vm.monitorListListType = GSI_FindItem(it, "ListType")
+                                        vm.monitorListQ_Key = GSI_FindItem(it, "Q_Key")
+                                        vm.monitorListN_Tag = GSI_FindItem(it, "N_Tag")
+                                        vm.monitorListDB_Counter = GSI_FindItem(it, "DB_Counter")
+                                    }
 
-                    "<Department" -> {
-                        vm.departmentName = GSI_FindItem(message, "Name")
-                        vm.departmentIndex = GSI_FindItem(message, "Index")
-                        vm.departmentAvoid = GSI_FindItem(message, "Avoid")
-                        vm.departmentQ_Key = GSI_FindItem(message, "Q_Key")
-                        vm.departmentHold = GSI_FindItem(message, "Hold")
-                    }
+                                    "System" -> {
+                                        vm.systemName = GSI_FindItem(it, "Name")
+                                        vm.systemIndex = GSI_FindItem(it, "Index")
+                                        vm.systemAvoid = GSI_FindItem(it, "Avoid")
+                                        vm.systemSystemType = GSI_FindItem(it, "SystemType")
+                                        vm.systemQ_Key = GSI_FindItem(it, "Q_Key")
+                                        vm.systemN_Tag = GSI_FindItem(it, "N_Tag")
+                                        vm.systemHold = GSI_FindItem(it, "Hold")
+                                    }
 
-                    "<ConvFrequency" -> {
-                        vm.convFrequencyName  = GSI_FindItem(message, "Name")
-                        vm.convFrequencyIndex = GSI_FindItem(message, "Index")
-                        vm.convFrequencyAvoid = GSI_FindItem(message, "Avoid")
-                        vm.convFrequencyFreq = GSI_FindItem(message, "Freq")
-                        vm.convFrequencyMod = GSI_FindItem(message, "Mod")
-                        vm.convFrequencyHold = GSI_FindItem(message, "Hold")
-                        vm.convFrequencySvcType = GSI_FindItem(message, "SvcType")
-                        vm.convFrequencyP_Ch = GSI_FindItem(message, "P_Ch")
-                        vm.convFrequencySAS = GSI_FindItem(message, "SAS")
-                        vm.convFrequencySAD = GSI_FindItem(message, "SAD")
-                        vm.convFrequencyRecSlot = GSI_FindItem(message, "RecSlot")
-                        vm.convFrequencyLVL = GSI_FindItem(message, "LVL")
-                        vm.convFrequencyIFX = GSI_FindItem(message, "IFX")
-                        vm.convFrequencyTGID = GSI_FindItem(message, "TGID")
-                        vm.convFrequencyU_Id = GSI_FindItem(message, "U_Id")
-                    }
+                                    "Department" -> {
+                                        vm.departmentName = GSI_FindItem(it, "Name")
+                                        vm.departmentIndex = GSI_FindItem(it, "Index")
+                                        vm.departmentAvoid = GSI_FindItem(it, "Avoid")
+                                        vm.departmentQ_Key = GSI_FindItem(it, "Q_Key")
+                                        vm.departmentHold = GSI_FindItem(it, "Hold")
+                                    }
 
-                    "<TGID" -> {
-                        //vm.tgidName = GSI_FindItem(message, "Name")
-                        vm.convFrequencyName= GSI_FindItem(message, "Name") //workaround
-                        vm.tgidIndex = GSI_FindItem(message, "Index")
-                        vm.tgidAvoid = GSI_FindItem(message, "Avoid")
-                        vm.tgidTGID = GSI_FindItem(message, "TGID", 5)
-                        vm.tgidSetSlot = GSI_FindItem(message, "SetSlot")
-                        vm.tgidN_Tag = GSI_FindItem(message, "N_Tag")
-                        vm.tgidHold = GSI_FindItem(message, "Hold")
-                        //vm.tgidSvcType = GSI_FindItem(message, "SvcType")
-                        vm.convFrequencySvcType = GSI_FindItem(message, "SvcType") //workaround
-                        vm.tgidP_Ch = GSI_FindItem(message, "P_Ch")
-                        vm.tgidLVL = GSI_FindItem(message, "LVL")
-                    }
+                                    "TGID" -> {
+                                        //vm.tgidName = GSI_FindItem(it, "Name")
+                                        vm.convFrequencyName= GSI_FindItem(it, "Name") //workaround
+                                        vm.tgidIndex = GSI_FindItem(it, "Index")
+                                        vm.tgidAvoid = GSI_FindItem(it, "Avoid")
+                                        vm.tgidTGID = GSI_FindItem(it, "TGID")
+                                        vm.tgidSetSlot = GSI_FindItem(it, "SetSlot")
+                                        vm.tgidN_Tag = GSI_FindItem(it, "N_Tag")
+                                        vm.tgidHold = GSI_FindItem(it, "Hold")
+                                        //vm.tgidSvcType = GSI_FindItem(it, "Svc_Type")
+                                        vm.convFrequencySvcType = GSI_FindItem(message, "SvcType") //workaround
+                                        vm.tgidP_Ch = GSI_FindItem(it, "P_Ch")
+                                        vm.tgidLVL = GSI_FindItem(it, "LVL")
+                                    }
 
-                    "<UnitID" -> {
-                        vm.unitIDName = GSI_FindItem(message, "Name")
-                        vm.unitU_Id = GSI_FindItem(message, "U_Id")
-                    }
+                                    "UnitID" -> {
+                                        vm.unitIDName = GSI_FindItem(it, "Name")
+                                        vm.unitU_Id = GSI_FindItem(it, "U_Id")
+                                    }
 
-                    "<Site" -> {
-                        vm.siteName = GSI_FindItem(message, "Name")
-                        vm.siteIndex = GSI_FindItem(message, "Index")
-                        vm.siteAvoid = GSI_FindItem(message, "Avoid")
-                        vm.siteQ_Key = GSI_FindItem(message, "Q_Key")
-                        vm.siteHold = GSI_FindItem(message, "Hold")
-                        //vm.siteMod = GSI_FindItem(message, "Mod")
-                        vm.convFrequencyMod = GSI_FindItem(message, "Mod") //workaround
-                    }
+                                    "Site" -> {
+                                        vm.siteName = GSI_FindItem(it, "Name")
+                                        vm.siteIndex = GSI_FindItem(it, "Index")
+                                        vm.siteAvoid = GSI_FindItem(it, "Avoid")
+                                        vm.siteQ_Key = GSI_FindItem(it, "Q_Key")
+                                        vm.siteHold = GSI_FindItem(it, "Hold")
+                                        //vm.siteMod = GSI_FindItem(it, "Mod")
+                                        vm.convFrequencyMod = GSI_FindItem(message, "Mod") //workaround
+                                    }
 
-                    "<SiteFrequency" -> {
-                        //vm.siteFrequencyFreq = GSI_FindItem(message, "Freq")
-                        vm.convFrequencyFreq = GSI_FindItem(message, "Freq") //workaround
-                        vm.siteFrequencyIFX = GSI_FindItem(message, "IFX")
-                        vm.siteFrequencySAS = GSI_FindItem(message, "SAS")
-                        vm.siteFrequencySAD = GSI_FindItem(message, "SAD")
-                    }
+                                    "SiteFrequency" -> {
+                                        //vm.siteFrequencyFreq = GSI_FindItem(it, "Freq")
+                                        vm.convFrequencyFreq = GSI_FindItem(message, "Freq") //workaround
+                                        vm.siteFrequencyIFX = GSI_FindItem(it, "IFX")
+                                        vm.siteFrequencySAS = GSI_FindItem(it, "SAS")
+                                        vm.siteFrequencySAD = GSI_FindItem(it, "SAD")
+                                    }
 
-                    "<DualWatch" -> {
-                        vm.dualWatchPRI = GSI_FindItem(message, "PRI")
-                        vm.dualWatchCC = GSI_FindItem(message, "CC", previousValue = vm.dualWatchCC)
-                        vm.dualWatchWX = GSI_FindItem(message, "WX")
-                    }
+                                    "DualWatch" -> {
+                                        vm.dualWatchPRI = GSI_FindItem(it, "PRI")
+                                        vm.dualWatchCC = GSI_FindItem(it, "CC", previousValue = vm.dualWatchCC)
+                                        vm.dualWatchWX = GSI_FindItem(it, "WX")
+                                    }
 
-                    "<Property" -> {
-                        vm.propertyF = GSI_FindItem(message, "F")
-                        vm.propertyVOL = GSI_FindItem(message, "VOL", previousValue = vm.propertyVOL)
-                        vm.propertySQL = GSI_FindItem(message, "SQL", previousValue = vm.propertySQL)
-                        vm.propertySig = GSI_FindItem(message, "Sig")
-                        vm.propertyAtt = GSI_FindItem(message, "Att")
-                        vm.propertyRec = GSI_FindItem(message, "Rec")
-                        vm.propertyKeyLock = GSI_FindItem(message, "KeyLock")
-                        vm.propertyP25Status = GSI_FindItem(message, "P25Status")
-                        vm.propertyMute = GSI_FindItem(message, "Mute")
-                        vm.propertyBacklight = GSI_FindItem(message, "Backlight")
-                        vm.propertyA_led = GSI_FindItem(message, "A_Led")
-                        vm.propertyDir = GSI_FindItem(message, "Dir")
-                        vm.propertyRssi = GSI_FindItem(message, "Rssi")
-                    }
-
-                    "<SrchFrequency" -> {
-                        vm.srchFreqFreq = GSI_FindItem(message, "Freq")
-                        vm.srchFreqMode = GSI_FindItem(message, "Mod")
-                        vm.srchFreqHold = GSI_FindItem(message, "Hold")
-                    }
-
-                    "<SearchBanks" -> {
-                        vm.searchBanksBankStatus = GSI_FindItem(message, "BankStatus")
-                        vm.searchBanksName = GSI_FindItem(message, "Name")
-                        vm.searchBanksBankNo = GSI_FindItem(message, "BankNo")
-                    }
-
-                    "<SearchRange" -> {
-                        vm.searchRangeLower = GSI_FindItem(message, "Lower")
-                        vm.searchRangeUpper = GSI_FindItem(message, "Upper")
-                        vm.searchRangeMod = GSI_FindItem(message, "Mod")
-                        vm.searchRangeStep = GSI_FindItem(message, "Step")
+                                    "Property" -> {
+                                        vm.propertyF = GSI_FindItem(it, "F")
+                                        vm.propertyVOL = GSI_FindItem(it, "VOL", previousValue = vm.propertyVOL)
+                                        vm.propertySQL = GSI_FindItem(it, "SQL", previousValue = vm.propertySQL)
+                                        vm.propertySig = GSI_FindItem(it, "Sig")
+                                        vm.propertyAtt = GSI_FindItem(it, "Att")
+                                        vm.propertyRec = GSI_FindItem(it, "Rec")
+                                        vm.propertyKeyLock = GSI_FindItem(it, "KeyLock")
+                                        vm.propertyP25Status = GSI_FindItem(it, "P25Status")
+                                        vm.propertyMute = GSI_FindItem(it, "Mute")
+                                        vm.propertyBacklight = GSI_FindItem(it, "Backlight")
+                                        vm.propertyA_led = GSI_FindItem(it, "A_Led")
+                                        vm.propertyDir = GSI_FindItem(it, "Dir")
+                                        vm.propertyRssi = GSI_FindItem(it, "Rssi")
+                                    }
+                                }
+                            }
+                        }
                     }
 
 
@@ -166,12 +190,17 @@ class ParseScannerData(var vm: viewModel) {
                             vm.longitude = parts[2]
                             vm.range = parts[3]
                         } catch (e: Exception) {
-                            println("Error: ${e.message}")
+                            println("Error 176: ${e.message}")
                         }
                     }
 
                     "STS" -> {
-                        vm.stsLines = message.split(",").toTypedArray()
+                        //Log.d("STS Message: ", message)
+                        when {
+                            vm.isSDSScanner() -> stsDecodeSDS(message)
+                            vm.model.contains("536") -> stsDecode536(message)
+                            else -> vm.stsLines = message.split(",").toTypedArray()
+                        }
                     }
 
                     "PWR" -> {
@@ -187,7 +216,7 @@ class ParseScannerData(var vm: viewModel) {
                 }
             }
         } catch (e: Exception) {
-            //println("Error: ${e.message}")
+            println("Error 202: ${e.message}")
         }
     }
 
@@ -206,6 +235,41 @@ class ParseScannerData(var vm: viewModel) {
             return result
         } else {
             return ""
+        }
+    }
+
+    fun stsDecodeSDS(string: String) {
+        var data = string.replace("STS,", "")
+        var nextCommaLoc = data.indexOf(",")
+        vm.stsLines[1] = data.substring(0, nextCommaLoc)
+        data = data.removeRange(0, nextCommaLoc + 1 )
+        for (i in 2..(((vm.stsLines[1].length) * 2) +1) ) {
+            if (data.get(24) == ',') {
+                vm.stsLines[i] = data.substring(0, 24)
+                data = data.removeRange(0, 25)
+            } else if (data.get(30) == ',') {
+                vm.stsLines[i] = data.substring(0, 30)
+                data = data.removeRange(0, 31)
+            }
+        }
+    }
+
+    fun stsDecode536(string: String) {
+        var data = string.replace("STS,", "")
+        var nextCommaLoc = data.indexOf(",")
+        vm.stsLines[1] = data.substring(0, nextCommaLoc)
+        data = data.removeRange(0, nextCommaLoc + 1 )
+        for (i in 2..(((vm.stsLines[1].length) * 2) +1) ) {
+            if (data.get(0) == ',') {
+                vm.stsLines[i] = ""
+                data = data.removeRange(0, 1)
+            } else if (data.get(35) == ',') {
+                vm.stsLines[i] = data.substring(0, 35)
+                data = data.removeRange(0, 36)
+            } else if (data.get(36) == ',') {
+                vm.stsLines[i] = data.substring(0, 36)
+                data = data.removeRange(0, 37)
+            }
         }
     }
 }

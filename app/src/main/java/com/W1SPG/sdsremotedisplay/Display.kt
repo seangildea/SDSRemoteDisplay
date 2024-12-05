@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -201,7 +201,7 @@ fun Display() {
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
 
-                Button(
+                FilledTonalButton(
                     onClick = { vm.pressButton("hold") }, shape = RectangleShape
                 ) {
                     Text(
@@ -214,7 +214,7 @@ fun Display() {
                     )
                 }
 
-                Button(
+                FilledTonalButton(
                     onClick = { vm.pressButton("<") }, shape = RectangleShape
                 ) {
                     Text(
@@ -227,7 +227,7 @@ fun Display() {
                     )
                 }
 
-                Button(
+                FilledTonalButton(
                     onClick = { vm.pressButton(">") }, shape = RectangleShape
                     ) {
                     Text(
@@ -242,7 +242,7 @@ fun Display() {
 
                 // don't display the "to scan" button during a close call hit
                 var toScanButtonAlpha = if (vm.searchScreen) 1f else 0f
-                Button(
+                FilledTonalButton(
                     onClick = { vm.pressButton("toscan") }, shape = RectangleShape,
                     modifier = Modifier.alpha(toScanButtonAlpha)
                 ) {
@@ -266,7 +266,7 @@ fun Display() {
                 .fillMaxSize(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Button(onClick = { vm.pressButton("avoid") }, shape = RectangleShape
+            FilledTonalButton(onClick = { vm.pressButton("avoid") }, shape = RectangleShape
             ) {
                 Text(text = "Avoid",
                     fontSize = 18.sp,
@@ -276,20 +276,20 @@ fun Display() {
                         .align(Alignment.CenterVertically) )
             }
             Column {
-                Button(onClick = { vm.pressButton("volup") },) {
+                FilledTonalButton(onClick = { vm.pressButton("volup") },) {
                     Text(text = "Vol Up")
 
                 }
-                Button(onClick = { vm.pressButton("voldn") },) {
+                FilledTonalButton(onClick = { vm.pressButton("voldn") },) {
                     Text(text = "Vol Dn")
                 }
             }
             Column {
-                Button(onClick = { vm.pressButton("squp") }) {
+                FilledTonalButton(onClick = { vm.pressButton("squp") }) {
                     Text(text = "SQ Up")
 
                 }
-                Button(onClick = { vm.pressButton("sqdn") }) {
+                FilledTonalButton(onClick = { vm.pressButton("sqdn") }) {
                     Text(text = "SQ Dn")
                 }
             }

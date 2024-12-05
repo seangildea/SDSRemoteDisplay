@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.W1SPG.sdsremotedisplay.ui.theme.subValues
 import com.felhr.usbserial.UsbSerialDevice
 import com.felhr.usbserial.UsbSerialInterface.DATA_BITS_8
 import com.felhr.usbserial.UsbSerialInterface.FLOW_CONTROL_XON_XOFF
@@ -31,6 +32,7 @@ import com.felhr.usbserial.UsbSerialInterface.STOP_BITS_1
 import com.felhr.usbserial.UsbSerialInterface.UsbReadCallback
 import java.util.Timer
 import java.util.TimerTask
+import kotlin.system.exitProcess
 
 lateinit var m_usbManager: UsbManager
 var m_device: UsbDevice? = null
@@ -80,7 +82,6 @@ class MainActivity : androidx.activity.ComponentActivity() {
     }
 
     private fun DoStuff() {
-        var commands = listOf("MDL", "GSI", "LCR", "STS", "PWR")
         val displayTimerDelay = 0
         val displayTimerPeriod = 300 // repeat
 
@@ -90,7 +91,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
                     runOnUiThread {
                         if (connectedToScanner) {
                             if (vm.clearToSend) {
-                                for (command in commands) {
+                                for (command in vm.scannerCommands) {
                                     SendUsbData(command)
                                 }
                             }
@@ -99,7 +100,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
                             if (vm.keyPress != "") {
                                 var keys = vm.keyPress.split(" ")
                                 for (key in keys) {
-                                    Log.d("In Key press",  key)
+                                    Log.d("In Key press", key)
                                     SendUsbData(key)
                                 }
                                 vm.keyPress = ""
@@ -124,18 +125,18 @@ class MainActivity : androidx.activity.ComponentActivity() {
                         }
                     }
                 }
-            },  displayTimerDelay .toLong(), displayTimerPeriod.toLong() )
+            }, displayTimerDelay.toLong(), displayTimerPeriod.toLong())
 
             val gpsTimerDelay = 1000
             val gpsTimerPeriod = 5000 //update gps every 5 seconds
             gpsTimer.schedule(object : TimerTask() {
                 override fun run() {
                     //if (connectedToScanner) {
-                        var nmeaSentence = getNMEASentence()
-                        if (nmeaSentence != "") {
-                            SendUsbData(nmeaSentence)
-                            Log.d("NMEA Sent", nmeaSentence)
-                        }
+                    var nmeaSentence = getNMEASentence()
+                    if (nmeaSentence != "") {
+                        SendUsbData(nmeaSentence)
+                        //Log.d("NMEA Sent", nmeaSentence)
+                    }
                     //}
                 }
             }, gpsTimerDelay.toLong(), gpsTimerPeriod.toLong())
@@ -152,7 +153,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
         locationPermissionGranted = checkLocationPermission()
         if (locationPermissionGranted) {
             //Log.d("GPS Enabled", "GPS Enabled")
-            var lat = locationDDtoDDm(latitude,false)
+            var lat = locationDDtoDDm(latitude, false)
             var long = locationDDtoDDm(longitude, true)
 
             var latNS = "N"
@@ -166,7 +167,8 @@ class MainActivity : androidx.activity.ComponentActivity() {
             }
 
             //build NMEA - scanner only cares about latitude and longitude data
-            var nmeaSentence = "\$GPRMC,,A," + lat + "," + latNS + "," + long + "," + lonEW + ",,,,,,"
+            var nmeaSentence =
+                "\$GPRMC,,A," + lat + "," + latNS + "," + long + "," + lonEW + ",,,,,,"
             return nmeaSentence
         }
         return ""
@@ -184,7 +186,8 @@ class MainActivity : androidx.activity.ComponentActivity() {
         if (hasGps) {
             if (ContextCompat.checkSelfPermission(
                     this,
-                    android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                    android.Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
             ) {
                 runOnUiThread {
                     locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
@@ -215,7 +218,11 @@ class MainActivity : androidx.activity.ComponentActivity() {
     }
 
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             REQUEST_CODE -> {
@@ -229,7 +236,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
         }
     }
 
-    private fun locationDDtoDDm(element: Double, longitude :Boolean): String {
+    private fun locationDDtoDDm(element: Double, longitude: Boolean): String {
         //Convert lat or long from DD format to DDm format
         //Integer is the degrees
         //Multiply the decimal part by 60
@@ -258,7 +265,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
         }
 
         // multiple decimal remainder by 60, integer is minutes, decimal is seconds
-        var minSec = ( ("." + degMin[1]).toDouble() * 60).toString().split(".")
+        var minSec = (("." + degMin[1]).toDouble() * 60).toString().split(".")
         var minutes = minSec[0]
         var seconds = minSec[1].take(4)
 
@@ -268,7 +275,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
 
         if (seconds.length < 4) { //not sure is this part is needed
             var len = seconds.length
-            when(len) { //pad out to 4 chars
+            when (len) { //pad out to 4 chars
                 0 -> seconds += "0000"
                 1 -> seconds += "000"
                 2 -> seconds += "00"
@@ -276,7 +283,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
             }
         }
 
-        var ddmElement = degrees + minutes + "." +seconds.take(4)
+        var ddmElement = degrees + minutes + "." + seconds.take(4)
         return ddmElement
     }
 
@@ -331,7 +338,9 @@ class MainActivity : androidx.activity.ComponentActivity() {
         override fun onReceivedData(rx: ByteArray) {
             try {
                 //Log.d("Byte:", rx.joinToString("") { "%02x".format(it) })
-                var usbRxData = String(rx, Charsets.UTF_8)
+
+                var rxSub = substituteUnidenIcons(rx)
+                var usbRxData = String(rxSub, Charsets.UTF_8)
 
 
                 if (usbRxData.contains("MDL")) {
@@ -346,14 +355,14 @@ class MainActivity : androidx.activity.ComponentActivity() {
 
                 var lastChar: String = usbRxData.takeLast(1)
                 if (lastChar == "\r") { //concatenate until last char is \r
-                    //Log.d("Rx:", rxData)
+                    Log.d("Rx:", rxData)
                     if (rxData != "") {
                         sdsData.decodeResponse(rxData)
                     }
                     rxData = ""
                 }
             } catch (e: Exception) {
-                //println("Error: ${e.message}")
+                println("Error: ${e.message}")
             }
         }
     }
@@ -423,5 +432,16 @@ class MainActivity : androidx.activity.ComponentActivity() {
     fun MyScreen() {
         Display()
         HandleOrientationChanges()
+    }
+
+    fun substituteUnidenIcons(data: ByteArray): ByteArray {
+        subValues.forEach { value ->
+            val unidenFontByte = value.key.toByte()
+            var found = data.indexOf(unidenFontByte)
+            if (found > 0) {
+                data.set(found, value.value.toByte())
+            }
+        }
+        return data
     }
 }
