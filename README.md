@@ -30,4 +30,4 @@ You may want to use a OTG (on the go) USB cable which will allow you to charge t
 
 Run the app before connecting the USB cable or disconnect and reconnect after the app is started for the phone to discover the scanner connection.
 
-When in vertical display, touching the system, department, of channel will hold the scanner on the selected item.  The color will invert to indicate the state (there may be a short delay before the app gets the hold state from the scanner).  To resume scanning touch the text again to release the hold.
+When in vertical display, touching the text of the system, department, or channel will hold the scanner on the selected item.  The color will invert to indicate the state (there may be a short delay before the app gets the hold state from the scanner).  To resume scanning touch the text again to release the hold.
