@@ -16,6 +16,10 @@ Vertical display example:
 
 Horizontal display:
 
+It does not transfer audio.
+
+At this point it will not show the waterfall display.
+
 
 # GPS
 
@@ -24,6 +28,8 @@ This allows location based scanning without a GPS "puck".
 GPS data will only be fed to the scanner when the app is the active app on the phone.
 
 # Usage
+
+Should work on any Android phone with Android version 7 or later, although no guarantees.
 
 Connect a USB cable directly between the phone and the scanner using the same scanner's USB port that Uniden's Sentinel program uses.
 You may want to use a OTG (on the go) USB cable which will allow you to charge the phone while in use, especially if you connect to an SDS100 which seems to pull power from the phone at a higher rate.
