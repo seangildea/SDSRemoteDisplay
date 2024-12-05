@@ -127,6 +127,23 @@ class ParseScannerData(var vm: viewModel) {
                                         vm.tgidLVL = GSI_FindItem(it, "LVL")
                                     }
 
+                                    "ConvFrequency" -> {
+                                        vm.convFrequencyName= GSI_FindItem(it, "Name")
+                                        vm.convFrequencyMod = GSI_FindItem(message, "Mod")
+                                        vm.convFrequencyIndex = GSI_FindItem(message, "Index")
+                                        vm.convFrequencyFreq = GSI_FindItem(message, "Freq")
+                                        vm.convFrequencySvcType = GSI_FindItem(message, "SvcType")
+                                        vm.convFrequencySAS = GSI_FindItem(message, "SAS")
+                                        vm.convFrequencyP_Ch = GSI_FindItem(message, "P_Ch")
+                                        vm.convFrequencySAD = GSI_FindItem(message, "SAD")
+                                        vm.convFrequencyRecSlot = GSI_FindItem(message, "RecSlot")
+                                        vm.convFrequencyLVL = GSI_FindItem(message, "LVL")
+                                        vm.convFrequencyIFX = GSI_FindItem(message, "IFX")
+                                        vm.convFrequencyTGID = GSI_FindItem(message, "TGID")
+                                        vm.convFrequencyU_Id = GSI_FindItem(message, "U_Id")
+                                        vm.convFrequencyHold = GSI_FindItem(message, "Hold")
+                                    }
+
                                     "UnitID" -> {
                                         vm.unitIDName = GSI_FindItem(it, "Name")
                                         vm.unitU_Id = GSI_FindItem(it, "U_Id")
