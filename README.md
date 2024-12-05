@@ -29,7 +29,7 @@ GPS data will only be fed to the scanner when the app is the active app on the p
 
 # Usage
 
-Should work on any Android phone with Android version 7 or later, although no guarantees.
+Should work on any Android phone or tablet with Android version 7 or later, although no guarantees.
 
 Connect a USB cable directly between the phone and the scanner using the same scanner's USB port that Uniden's Sentinel program uses.
 You may want to use a OTG (on the go) USB cable which will allow you to charge the phone while in use, especially if you connect to an SDS100 which seems to pull power from the phone at a higher rate.
@@ -37,3 +37,5 @@ You may want to use a OTG (on the go) USB cable which will allow you to charge t
 Run the app before connecting the USB cable or disconnect and reconnect after the app is started for the phone to discover the scanner connection.
 
 When in vertical display, touching the text of the system, department, or channel will hold the scanner on the selected item.  The color will invert to indicate the state (there may be a short delay before the app gets the hold state from the scanner).  To resume scanning touch the text again to release the hold.
+
+No network connection is required or used.
