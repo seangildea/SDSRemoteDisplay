@@ -13,8 +13,12 @@ When connected by a USB cable to the scanner it will display the on screen data 
 
 Vertical display example:
 
+<img src="https://github.com/seangildea/SDSRemoteDisplay/blob/master/Vertical1.jpg" width="200" height="400">
 
-Horizontal display:
+Horizontal display example (SDS Scanner):
+
+<img src="https://github.com/seangildea/SDSRemoteDisplay/blob/master/Horizontal1.jpg" width="400" height="200">
+
 
 It does not transfer audio.
 
