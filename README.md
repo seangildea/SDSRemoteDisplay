@@ -43,3 +43,11 @@ Run the app before connecting the USB cable or disconnect and reconnect after th
 When in vertical display, touching the text of the system, department, or channel will hold the scanner on the selected item.  The color will invert to indicate the state (there may be a short delay before the app gets the hold state from the scanner).  To resume scanning touch the text again to release the hold.
 
 No network connection is required or used.
+
+# How to sideload apps
+
+To install this Android APK, you will need to sideload it.  Here are a couple of websites for how to do it.
+
+https://www.xda-developers.com/how-to-sideload-install-android-app-apk/
+
+https://www.howtogeek.com/313433/how-to-sideload-apps-on-android/
