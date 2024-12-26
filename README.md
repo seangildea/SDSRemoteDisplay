@@ -9,6 +9,8 @@ It will work with SDS200, SDS100, BCD536, and BCD436*.
 
 This was created mainly as a method for myself to learn the basics of Kotlin and Android app programming.
 
+Contact: W1SPG.Radio at gmail.com
+
 # What It Does
 
 When connected by a USB cable to the scanner it will display the on screen data in two possible formats depending on the screen orientation of the phone/tablet.
