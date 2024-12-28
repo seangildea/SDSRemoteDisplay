@@ -192,6 +192,8 @@ class viewModel : ViewModel() {
     val X36BIGFONT =  40.sp
     val X36SMALLFONT = 20.sp
 
+    var maxVolume = 15
+    var maxSquelch = 15
 
     var HDisplayLine1 by mutableStateOf("")
     var HDisplayLine2 by mutableStateOf("")
@@ -258,7 +260,7 @@ class viewModel : ViewModel() {
 
                 "volup" -> {
                     var curVol = propertyVOL.toInt()
-                    if (curVol < 15) {
+                    if (curVol < maxVolume) {
                         var newVol = curVol + 1
                         keyPress = "VOL," + newVol.toString()
                         Log.d("VOLUME", "up")
@@ -276,7 +278,7 @@ class viewModel : ViewModel() {
 
                 "squp" -> {
                     var curSQ = propertySQL.toInt()
-                    if (curSQ < 15) {
+                    if (curSQ < maxSquelch) {
                         var newSQ = curSQ + 1
                         keyPress = "SQL," + newSQ.toString()
                     }
@@ -413,6 +415,27 @@ class viewModel : ViewModel() {
         } // if not in scan mode, keep previous determined value
     }
 
+    fun setMaxVolumeAndSquelch() {
+        when (vm.model) {
+            "SDS100" -> {
+                maxVolume = 15
+                maxSquelch = 15
+            }
+            "SDS200" -> {
+                maxVolume = 29
+                maxSquelch = 19
+            }
+            "BCD536HP" -> {
+                maxVolume = 29
+                maxSquelch = 19
+            }
+            "BCD436HP" -> { //Todo: what is the max vol and squelch for a 436?
+                maxVolume = 15
+                maxSquelch = 15
+            }
+        }
+    }
+
     fun updateDisplayData() {
         // This will stop sending commands to the scanner when it is not responding
         // to try to prevent button lag
@@ -432,6 +455,22 @@ class viewModel : ViewModel() {
         }
 
         isSimpleMode()
+
+        setMaxVolumeAndSquelch()
+
+        //LED
+        when (propertyA_led) {
+            //Blue, Red, Magenta, Green, Cyan, Yellow, White, Off
+            "Blue" -> displayLED = BLUE
+            "Red" -> displayLED = RED
+            "Magenta" -> displayLED = MAGENTA
+            "Green" -> displayLED = GREEN
+            "Cyan" -> displayLED = CYAN
+            "Yellow" -> displayLED = YELLOW
+            "White" -> displayLED = WHITE
+            "Off" -> displayLED = backGroundColor
+            else -> displayLED = backGroundColor
+        }
 
         if (isPortraitMode) {
             when (scannerInfoV_screen) {
@@ -491,19 +530,6 @@ class viewModel : ViewModel() {
                 }
             }
 
-            //LED
-            when (propertyA_led) {
-                //Blue, Red, Magenta, Green, Cyan, Yellow, White, Off
-                "Blue" -> displayLED = BLUE
-                "Red" -> displayLED = RED
-                "Magenta" -> displayLED = MAGENTA
-                "Green" -> displayLED = GREEN
-                "Cyan" -> displayLED = CYAN
-                "Yellow" -> displayLED = YELLOW
-                "White" -> displayLED = WHITE
-                "Off" -> displayLED = backGroundColor
-                else -> displayLED = backGroundColor
-            }
 
             //QuickKeyStatus field 1
             when {

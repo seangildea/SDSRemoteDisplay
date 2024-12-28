@@ -14,12 +14,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -27,6 +29,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 
 //var HSIZE = 67.dp
@@ -39,10 +42,18 @@ fun HDisplay() {
     val screenHeight = configuration.screenHeightDp
     val screenWidth = configuration.screenWidthDp
 
-    var HSIZE = (screenWidth / 10.8).dp
-    var VSIZE = (screenHeight / 9.2).dp
+    val HSIZE = (screenWidth / 11).dp
+    val VSIZE = (screenHeight / 9.2).dp
     val HBUTTONSPACER = 10.dp
     val SIGBARSIZE = 15.dp
+
+    val NUMBUTTONFONTSIZE = 33.sp
+    val TEXTBUTTONFONTSIZE = 18.sp
+
+    val SYSDEPTCHAN_HSIZE = (screenWidth / 7).dp
+
+    // text to add to string to make underline fill entire space
+    val TEXTEXTENDER = "                                 "
 
     Row(
         Modifier
@@ -65,10 +76,12 @@ fun HDisplay() {
                     if (vm.highlightArray[1]) {
                         color = vm.backGroundColor
                         bcolor = vm.defaultSystemTextColor
+                        vm.HDisplayLine2 += TEXTEXTENDER
                     }
                     var underlined = TextDecoration.None
                     if (vm.underlineArray[1]) {
                         underlined = TextDecoration.Underline
+                        vm.HDisplayLine2 += TEXTEXTENDER
                     }
                     Text(
                         text = vm.HDisplayLine1,
@@ -122,7 +135,13 @@ fun HDisplay() {
                             Modifier.size(SIGBARSIZE)
                         )
                     }
+                    else -> Image(
+                        painter = painterResource(R.drawable._0bars),
+                        contentDescription = "Signal Level 0",
+                        Modifier.size(SIGBARSIZE)
+                    )
                 }
+                Spacer(modifier = Modifier.width(5.dp))
                 Text(
                     text = "", Modifier  //Uniden LED notification
                         //blue, red magenta, green, cyan yellow, white
@@ -137,10 +156,12 @@ fun HDisplay() {
                 if (vm.highlightArray[2]) {
                     color = vm.backGroundColor
                     bcolor = vm.defaultSystemTextColor
+                    vm.HDisplayLine2 += TEXTEXTENDER
                 }
                 var underlined = TextDecoration.None
                 if (vm.underlineArray[2]) {
                     underlined = TextDecoration.Underline
+                    vm.HDisplayLine2 += TEXTEXTENDER
                 }
                 Text(
                     text = vm.HDisplayLine2,
@@ -159,10 +180,12 @@ fun HDisplay() {
                 if (vm.highlightArray[3]) {
                     color = vm.backGroundColor
                     bcolor = vm.defaultSystemTextColor
+                    vm.HDisplayLine3 += TEXTEXTENDER
                 }
                 var underlined = TextDecoration.None
                 if (vm.underlineArray[3]) {
                     underlined = TextDecoration.Underline
+                    vm.HDisplayLine3 += TEXTEXTENDER
                 }
                 Text(
                     text = vm.HDisplayLine3,
@@ -181,10 +204,12 @@ fun HDisplay() {
                 if (vm.highlightArray[4]) {
                     color = vm.backGroundColor
                     bcolor = vm.defaultSystemTextColor
+                    vm.HDisplayLine4 += TEXTEXTENDER
                 }
                 var underlined = TextDecoration.None
                 if (vm.underlineArray[4]) {
                     underlined = TextDecoration.Underline
+                    vm.HDisplayLine4 += TEXTEXTENDER
                 }
                 Text(
                     text = vm.HDisplayLine4,
@@ -203,10 +228,12 @@ fun HDisplay() {
                 if (vm.highlightArray[5]) {
                     color = vm.backGroundColor
                     bcolor = vm.defaultSystemTextColor
+                    vm.HDisplayLine5 += TEXTEXTENDER
                 }
                 var underlined = TextDecoration.None
                 if (vm.underlineArray[5]) {
                     underlined = TextDecoration.Underline
+                    vm.HDisplayLine5 += TEXTEXTENDER
                 }
                 Text(
                     text = vm.HDisplayLine5,
@@ -225,10 +252,12 @@ fun HDisplay() {
                 if (vm.highlightArray[6]) {
                     color = vm.backGroundColor
                     bcolor = vm.defaultSystemTextColor
+                    vm.HDisplayLine6 += TEXTEXTENDER
                 }
                 var underlined = TextDecoration.None
                 if (vm.underlineArray[6]) {
                     underlined = TextDecoration.Underline
+                    vm.HDisplayLine6 += TEXTEXTENDER
                 }
                 Text(
                     text = vm.HDisplayLine6,
@@ -247,10 +276,12 @@ fun HDisplay() {
                 if (vm.highlightArray[7]) {
                     color = vm.backGroundColor
                     bcolor = vm.defaultSystemTextColor
+                    vm.HDisplayLine7 += TEXTEXTENDER
                 }
                 var underlined = TextDecoration.None
                 if (vm.underlineArray[7]) {
                     underlined = TextDecoration.Underline
+                    vm.HDisplayLine7 += TEXTEXTENDER
                 }
                 Text(
                     text = vm.HDisplayLine7,
@@ -269,10 +300,12 @@ fun HDisplay() {
                 if (vm.highlightArray[8]) {
                     color = vm.backGroundColor
                     bcolor = vm.defaultSystemTextColor
+                    vm.HDisplayLine8 += TEXTEXTENDER
                 }
                 var underlined = TextDecoration.None
                 if (vm.underlineArray[8]) {
                     underlined = TextDecoration.Underline
+                    vm.HDisplayLine8 += TEXTEXTENDER
                 }
                 Text(
                     text = vm.HDisplayLine8,
@@ -291,10 +324,12 @@ fun HDisplay() {
                 if (vm.highlightArray[9]) {
                     color = vm.backGroundColor
                     bcolor = vm.defaultSystemTextColor
+                    vm.HDisplayLine9 += TEXTEXTENDER
                 }
                 var underlined = TextDecoration.None
                 if (vm.underlineArray[9]) {
                     underlined = TextDecoration.Underline
+                    vm.HDisplayLine9 += TEXTEXTENDER
                 }
                 Text(
                     text = vm.HDisplayLine9,
@@ -313,10 +348,12 @@ fun HDisplay() {
                 if (vm.highlightArray[10]) {
                     color = vm.backGroundColor
                     bcolor = vm.defaultSystemTextColor
+                    vm.HDisplayLine10 += TEXTEXTENDER
                 }
                 var underlined = TextDecoration.None
                 if (vm.underlineArray[10]) {
                     underlined = TextDecoration.Underline
+                    vm.HDisplayLine10 += TEXTEXTENDER
                 }
                 Text(
                     text = vm.HDisplayLine10,
@@ -333,6 +370,7 @@ fun HDisplay() {
                 var underlined = TextDecoration.None
                 if (vm.underlineArray[11]) {
                     underlined = TextDecoration.Underline
+                    vm.HDisplayLine11 += TEXTEXTENDER
                 }
                 Text(
                     text = vm.HDisplayLine11,
@@ -348,6 +386,7 @@ fun HDisplay() {
                 var underlined = TextDecoration.None
                 if (vm.underlineArray[12]) {
                     underlined = TextDecoration.Underline
+                    vm.HDisplayLine12 += TEXTEXTENDER
                 }
                 Text(
                     text = vm.HDisplayLine12,
@@ -363,6 +402,7 @@ fun HDisplay() {
                 var underlined = TextDecoration.None
                 if (vm.underlineArray[13]) {
                     underlined = TextDecoration.Underline
+                    vm.HDisplayLine13 += TEXTEXTENDER
                 }
                 Text(
                     text = vm.HDisplayLine13,
@@ -378,6 +418,7 @@ fun HDisplay() {
                 var underlined = TextDecoration.None
                 if (vm.underlineArray[14]) {
                     underlined = TextDecoration.Underline
+                    vm.HDisplayLine14 += TEXTEXTENDER
                 }
                 Text(
                     text = vm.HDisplayLine14,
@@ -393,6 +434,7 @@ fun HDisplay() {
                 var underlined = TextDecoration.None
                 if (vm.underlineArray[15]) {
                     underlined = TextDecoration.Underline
+                    vm.HDisplayLine15 += TEXTEXTENDER
                 }
                 Text(
                     text = vm.HDisplayLine15,
@@ -408,6 +450,7 @@ fun HDisplay() {
                 var underlined = TextDecoration.None
                 if (vm.underlineArray[16]) {
                     underlined = TextDecoration.Underline
+                    vm.HDisplayLine16 += TEXTEXTENDER
                 }
                 Text(
                     text = vm.HDisplayLine16,
@@ -432,18 +475,21 @@ fun HDisplay() {
             ) {
                 FilledTonalButton(
                     onClick = { vm.pressButton("A") },
+                    shape = RectangleShape,
                     contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = vm.firstButton) }
+                    modifier = Modifier.size(width = SYSDEPTCHAN_HSIZE, height = VSIZE)
+                ) { Text(text = vm.firstButton,  fontSize = TEXTBUTTONFONTSIZE ) }
                 FilledTonalButton(
                     onClick = { vm.pressButton("B") }, contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = vm.secondButton) }
+                    shape = RectangleShape,
+                    modifier = Modifier.size(width = SYSDEPTCHAN_HSIZE, height = VSIZE)
+                ) { Text(text = vm.secondButton, fontSize = TEXTBUTTONFONTSIZE ) }
                 FilledTonalButton(
                     onClick = { vm.pressButton("C") },
+                    shape = RectangleShape,
                     contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = vm.thirdButton) }
+                    modifier = Modifier.size(width = SYSDEPTCHAN_HSIZE, height = VSIZE)
+                ) { Text(text = vm.thirdButton, fontSize = TEXTBUTTONFONTSIZE ) }
             }
         }
 
@@ -463,23 +509,23 @@ fun HDisplay() {
                     onClick = { vm.pressButton("1") },
                     modifier = Modifier.size(width = HSIZE, height = VSIZE),
                     contentPadding = PaddingValues(0.dp)
-                ) { Text(text = vm.buildButtonText("1", "SRCH1")) }
+                ) { Text(text = vm.buildButtonText("1", "SRCH1"), fontSize = NUMBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("2") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = vm.buildButtonText("2", "SRCH2")) }
+                ) { Text(text = vm.buildButtonText("2", "SRCH2"), fontSize = NUMBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("3") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = vm.buildButtonText("3", "SRCH3")) }
+                ) { Text(text = vm.buildButtonText("3", "SRCH3"), fontSize = NUMBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("volup") },
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE),
-                ) { Text(text = "Vol Up") }
+                ) { Text(text = "Vol Up", fontSize = TEXTBUTTONFONTSIZE ) }
             }
             Row(
                 Modifier
@@ -490,23 +536,23 @@ fun HDisplay() {
                 FilledTonalButton(
                     onClick = { vm.pressButton("4") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = vm.buildButtonText("4", "ATT")) }
+                ) { Text(text = vm.buildButtonText("4", "ATT"), fontSize = NUMBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("5") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = vm.buildButtonText("5", "DIM")) }
+                ) { Text(text = vm.buildButtonText("5", "DIM"), fontSize = NUMBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("6") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = vm.buildButtonText("6", "WX")) }
+                ) { Text(text = vm.buildButtonText("6", "WX"), fontSize = NUMBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("voldn") },
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = "Vol Dn") }
+                ) { Text(text = "Vol Dn", fontSize = TEXTBUTTONFONTSIZE ) }
             }
             Row(
                 Modifier
@@ -517,23 +563,23 @@ fun HDisplay() {
                 FilledTonalButton(
                     onClick = { vm.pressButton("7") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = vm.buildButtonText("7", "IFX")) }
+                ) { Text(text = vm.buildButtonText("7", "IFX"), fontSize = NUMBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("8") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = vm.buildButtonText("8", "REV")) }
+                ) { Text(text = vm.buildButtonText("8", "REV"), fontSize = NUMBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("9") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = vm.buildButtonText("9", "DISP")) }
+                ) { Text(text = vm.buildButtonText("9", "DISP"), fontSize = NUMBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("squp") },
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = "Sq Up") }
+                ) { Text(text = "Sq Up", fontSize = TEXTBUTTONFONTSIZE ) }
             }
             Row(
                 Modifier
@@ -544,23 +590,23 @@ fun HDisplay() {
                 FilledTonalButton(
                     onClick = { vm.pressButton(".") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = vm.buildButtonText(".", "No/PRI")) }
+                ) { Text(text = vm.buildButtonText(".", "No/PRI"), fontSize = NUMBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("0") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = vm.buildButtonText("0", "LVL")) }
+                ) { Text(text = vm.buildButtonText("0", "LVL"), fontSize = NUMBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("E") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = vm.buildButtonText("E", "Yes/0.SRCH")) }
+                ) { Text(text = vm.buildButtonText("E", "Yes/Q.SRCH"), fontSize = NUMBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("sqdn") },
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = "Sq Dn") }
+                ) { Text(text = "Sq Dn", fontSize = TEXTBUTTONFONTSIZE ) }
             }
             Row(
                 Modifier
@@ -571,22 +617,22 @@ fun HDisplay() {
                 FilledTonalButton(
                     onClick = { vm.pressButton("L") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = "Avoid") }
+                ) { Text(text = "Avoid", fontSize = TEXTBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("Y") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = "Record") }
+                ) { Text(text = "Record", fontSize = TEXTBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("Z") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = "ZIP") }
+                ) { Text(text = "ZIP", fontSize = TEXTBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton(">") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = "Func Up") }
+                ) { Text(text = "Func Up", fontSize = TEXTBUTTONFONTSIZE ) }
             }
             Row(
                 Modifier
@@ -597,22 +643,22 @@ fun HDisplay() {
                 FilledTonalButton(
                     onClick = { vm.pressButton("V") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = "Dim") }
+                ) { Text(text = "Dim", fontSize = TEXTBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("M") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = "Menu") }
+                ) { Text(text = "Menu", fontSize = TEXTBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("F") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = "Function") }
+                ) { Text(text = "Function", fontSize = TEXTBUTTONFONTSIZE ) }
                 Spacer(modifier = Modifier.width(HBUTTONSPACER))
                 FilledTonalButton(
                     onClick = { vm.pressButton("<") }, contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(width = HSIZE, height = VSIZE)
-                ) { Text(text = "Func Dn") }
+                ) { Text(text = "Func Dn", fontSize = TEXTBUTTONFONTSIZE ) }
 
             }
         }

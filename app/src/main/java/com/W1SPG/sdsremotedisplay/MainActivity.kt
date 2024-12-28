@@ -404,6 +404,10 @@ class MainActivity : androidx.activity.ComponentActivity() {
         }
     }
 
+    fun setUpSerial() {
+
+    }
+
     @Composable
     fun KeepScreenOn() {
         val currentView = LocalView.current

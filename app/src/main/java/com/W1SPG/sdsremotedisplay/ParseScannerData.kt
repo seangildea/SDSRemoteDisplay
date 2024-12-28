@@ -248,7 +248,7 @@ class ParseScannerData(var vm: viewModel) {
             var result = textLine.substring(start, end)
 
             result = result.replace("&amp;", "&")
-            result = result.replace("&apos", "'")
+            result = result.replace("&apos;", "'")
             return result
         } else {
             return ""
