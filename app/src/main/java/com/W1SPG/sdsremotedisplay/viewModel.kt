@@ -1,28 +1,17 @@
 package com.W1SPG.sdsremotedisplay
 
 import android.util.Log
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.text.InlineTextContent
-import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Call
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.Placeholder
-import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
-import java.lang.reflect.Modifier
 
 class viewModel : ViewModel() {
 
@@ -195,26 +184,7 @@ class viewModel : ViewModel() {
     var maxVolume = 15
     var maxSquelch = 15
 
-    var HDisplayLine1 by mutableStateOf("")
-    var HDisplayLine2 by mutableStateOf("")
-    var HDisplayLine3 by mutableStateOf("")
-    var HDisplayLine4 by mutableStateOf("")
-    var HDisplayLine5 by mutableStateOf("")
-    var HDisplayLine6 by mutableStateOf("")
-    var HDisplayLine7 by mutableStateOf("")
-    var HDisplayLine8 by mutableStateOf("")
-    var HDisplayLine9 by mutableStateOf("")
-    var HDisplayLine10 by mutableStateOf("")
-    var HDisplayLine11 by mutableStateOf("")
-    var HDisplayLine12 by mutableStateOf("")
-    var HDisplayLine13 by mutableStateOf("")
-    var HDisplayLine14 by mutableStateOf("")
-    var HDisplayLine15 by mutableStateOf("")
-    var HDisplayLine16 by mutableStateOf("")
-    var HDisplayLine17 by mutableStateOf("")
-    var HDisplayLine18 by mutableStateOf("")
-    var HDisplayLine19 by mutableStateOf("")
-    var HDisplayLine20 by mutableStateOf("")
+    var HDisplay by mutableStateOf (Array<String>(21) {""})
 
     var firstButton by mutableStateOf("System")
     var secondButton by mutableStateOf("Dept")
@@ -688,56 +658,39 @@ class viewModel : ViewModel() {
             //======================================================================================
 
             displayLinesLength = getSTSLineData(1).length
-            HDisplayLine1 = getSTSLineData(2)
-            HDisplayLine2 = getSTSLineData(4)
-            HDisplayLine3 = getSTSLineData(6)
-            HDisplayLine4 = getSTSLineData(8)
-            HDisplayLine5 = getSTSLineData(10)
-            HDisplayLine6 = getSTSLineData(12)
-            HDisplayLine7 = getSTSLineData(14)
-            HDisplayLine8 = getSTSLineData(16)
-            HDisplayLine9 = getSTSLineData(18)
-            HDisplayLine10 = getSTSLineData(20)
-            HDisplayLine11 = getSTSLineData(22)
-            HDisplayLine12 = getSTSLineData(24)
-            HDisplayLine13 = getSTSLineData(26)
-            HDisplayLine14 = getSTSLineData(28)
-            HDisplayLine15 = getSTSLineData(30)
-            HDisplayLine16 = getSTSLineData(32)
-            HDisplayLine17 = getSTSLineData(34)
-            HDisplayLine18 = getSTSLineData(36)
-            HDisplayLine19 = getSTSLineData(38)
-            HDisplayLine20 = getSTSLineData(40)
+
+            for (line in 2..40 step 2) {
+                HDisplay[line / 2] = getSTSLineData(line)
+            }
 
             if (!connectedToScanner) {
                 displayLinesLength = 5
-                HDisplayLine1 = "111111" //force large font
-                HDisplayLine4 = "NO CONNECTION"
+                HDisplay[1] = "111111" //force large font
+                HDisplay[4] = "NO CONNECTION"
             }
 
-            // remove uniden font and insert signal bars
+            // remove uniden font
             if (!scannerInfoV_screen.contains("menu")) {
-                HDisplayLine1 = HDisplayLine1.replace("��", "")
-                //HDisplayLine1 = HDisplayLine1.dropLast(4) + buildSignalStrengthBars()
+                HDisplay[1] = HDisplay[1].replace("��", "")
             }
 
             // function mode indicator
             if (propertyF == "On") {
-                HDisplayLine1 = "FUNC" + HDisplayLine1
+                HDisplay[1] = "FUNC" + HDisplay[1]
             }
 
             // get bottom button text
             var displayButtonTextArray = mutableListOf<String>()
             var buttonData = mutableListOf<String>()
             if (displayLinesLength == 17 ) {
-                displayButtonTextArray = HDisplayLine17.trim().split("  ").toMutableList()
-                HDisplayLine17 = ""
+                displayButtonTextArray = HDisplay[17].trim().split("  ").toMutableList()
+                HDisplay[17] = ""
             } else if (displayLinesLength == 14) {
-                displayButtonTextArray = HDisplayLine14.trim().split("  ").toMutableList()
-                HDisplayLine14 = ""
+                displayButtonTextArray = HDisplay[14].trim().split("  ").toMutableList()
+                HDisplay[14] = ""
             } else if (displayLinesLength == 20) { //close call only mode
-                displayButtonTextArray = HDisplayLine20.trim().split("  ").toMutableList()
-                HDisplayLine20 = ""
+                displayButtonTextArray = HDisplay[20].trim().split("  ").toMutableList()
+                HDisplay[20] = ""
             }
             for (button in displayButtonTextArray) {
                 if (button != "") {
