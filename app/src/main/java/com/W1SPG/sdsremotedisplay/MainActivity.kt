@@ -440,7 +440,6 @@ class MainActivity : androidx.activity.ComponentActivity() {
 
     @Composable
     fun MyScreen() {
-        Display()
         HandleOrientationChanges()
     }
 
@@ -455,6 +454,7 @@ class MainActivity : androidx.activity.ComponentActivity() {
         return data
     }
 
+    // set the time on the scanner to android system time with the DTM command
     fun timeSet() {
         val dtmFormat = SimpleDateFormat("yyyy,MM,dd,HH,mm,ss")
         val DTMCommand = "DTM,1," + dtmFormat.format(Date())
