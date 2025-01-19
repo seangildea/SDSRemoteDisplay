@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.content.res.Resources
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbManager
@@ -30,9 +29,10 @@ import com.felhr.usbserial.UsbSerialInterface.FLOW_CONTROL_XON_XOFF
 import com.felhr.usbserial.UsbSerialInterface.PARITY_NONE
 import com.felhr.usbserial.UsbSerialInterface.STOP_BITS_1
 import com.felhr.usbserial.UsbSerialInterface.UsbReadCallback
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Timer
 import java.util.TimerTask
-import kotlin.system.exitProcess
 
 lateinit var m_usbManager: UsbManager
 var m_device: UsbDevice? = null
@@ -131,16 +131,22 @@ class MainActivity : androidx.activity.ComponentActivity() {
             val gpsTimerPeriod = 5000 //update gps every 5 seconds
             gpsTimer.schedule(object : TimerTask() {
                 override fun run() {
-                    //if (connectedToScanner) {
                     var nmeaSentence = getNMEASentence()
                     if (nmeaSentence != "") {
                         SendUsbData(nmeaSentence)
                         //Log.d("NMEA Sent", nmeaSentence)
                     }
-                    //}
                 }
             }, gpsTimerDelay.toLong(), gpsTimerPeriod.toLong())
 
+            // Set the scanner to local time
+            val timeSetDelay = 30000
+            val timerSetPeriod = 600000
+            gpsTimer.schedule(object : TimerTask() {
+                override fun run() {
+                    timeSet()
+                }
+            }, timeSetDelay.toLong(), timerSetPeriod.toLong())
 
         } catch (e: Exception) {
             //println("Error: ${e.message}")
@@ -447,5 +453,11 @@ class MainActivity : androidx.activity.ComponentActivity() {
             }
         }
         return data
+    }
+
+    fun timeSet() {
+        val dtmFormat = SimpleDateFormat("yyyy,MM,dd,HH,mm,ss")
+        val DTMCommand = "DTM,1," + dtmFormat.format(Date())
+        SendUsbData(DTMCommand)
     }
 }

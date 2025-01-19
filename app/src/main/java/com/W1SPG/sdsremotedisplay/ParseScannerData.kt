@@ -47,24 +47,10 @@ class ParseScannerData(var vm: viewModel) {
                 //Log.d("Message: ", message)
                 var messageType: String = ""
 
-                /*
-                if (message.take(1) == "<") { //xml lines
-                    if (message.contains(" ")) { //skip xml lines that do not contain a space
-                        messageType =
-                            message.take(message.indexOf(" ")) //everything up to first space char
-                    }
-                } else { //non xml line
-                    messageType = message.take(3)
-                }
-                //Log.d("Type of Response", messageType)
-                 */
                 messageType = message.take(3)
 
                 when (messageType) {
                     "GSI" -> {
-                        //val pattern2 = Regex("<([\\/\\w]+)(\\s+[^>]*)?\\/>")
-                        //val lines =
-                            //pattern2.findAll(responseString, 0).map { it.value }.toList()
                         var lines = message.split(">")
                         lines.forEach() {
                             var line = it.trim()
