@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 
 @Composable
 fun HDisplay() {
@@ -326,7 +327,7 @@ fun showKeyButton(buttonText: String, onClick: String, width: Dp,
     ) { Text(text = vm.buildButtonText(buttonText, subText),  fontSize = fontSize ) }
 }
 
-
+/*
 @Preview(showSystemUi = true,
     device = "spec:width=1348dp,height=2992dp,dpi=420,isRound=false,chinSize=0dp,orientation=landscape"
 )
@@ -334,4 +335,4 @@ fun showKeyButton(buttonText: String, onClick: String, width: Dp,
 fun Preview() {
 
     HDisplay()
-}
+} */

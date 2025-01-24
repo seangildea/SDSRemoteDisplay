@@ -1,5 +1,6 @@
 package com.W1SPG.sdsremotedisplay
 
+import android.Manifest
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -10,14 +11,19 @@ import android.content.res.Configuration
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbManager
+import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.core.app.ActivityCompat
@@ -58,12 +64,14 @@ val gpsTimer = Timer()
 
 var isPortraitMode: Boolean = true
 
-class MainActivity : androidx.activity.ComponentActivity() {
+var inStartUpScreen: Boolean by mutableStateOf(true)
+
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        m_usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
+        m_usbManager = getSystemService(USB_SERVICE) as UsbManager
 
-        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
 
         val filter = IntentFilter()
         filter.addAction(ACTION_USB_PERMISSION)
@@ -153,77 +161,6 @@ class MainActivity : androidx.activity.ComponentActivity() {
         }
     }
 
-    // location stuff
-
-    private fun getNMEASentence(): String {
-        locationPermissionGranted = checkLocationPermission()
-        if (locationPermissionGranted) {
-            //Log.d("GPS Enabled", "GPS Enabled")
-            var lat = locationDDtoDDm(latitude, false)
-            var long = locationDDtoDDm(longitude, true)
-
-            var latNS = "N"
-            if (latitude < 0.0) {
-                latNS = "S"
-            }
-
-            var lonEW = "W"
-            if (longitude > 0.0) {
-                lonEW = "E"
-            }
-
-            //build NMEA - scanner only cares about latitude and longitude data
-            var nmeaSentence =
-                "\$GPRMC,,A," + lat + "," + latNS + "," + long + "," + lonEW + ",,,,,,"
-            return nmeaSentence
-        }
-        return ""
-    }
-
-    val locationListener = object : LocationListener {
-        override fun onLocationChanged(location: android.location.Location) {
-            latitude = location.latitude
-            longitude = location.longitude
-        }
-    }
-
-    private fun checkLocationPermission(): Boolean {
-        val hasGps = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        if (hasGps) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    android.Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                runOnUiThread {
-                    locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                    try {
-                        locationManager.requestLocationUpdates(
-                            LocationManager.GPS_PROVIDER,
-                            5000,
-                            10.toFloat(),
-                            locationListener
-                        )
-                    } catch (e: Exception) {
-                        //println("Error: ${e.message}")
-                    }
-                }
-                return true
-            } else {
-                if (!locationRequestDenied) { //don't ask again if user already said no
-                    // Request permission
-                    ActivityCompat.requestPermissions(
-                        this,
-                        arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-                        REQUEST_CODE
-                    )
-                }
-            }
-        }
-        return false
-    }
-
-
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -242,60 +179,39 @@ class MainActivity : androidx.activity.ComponentActivity() {
         }
     }
 
-    private fun locationDDtoDDm(element: Double, longitude: Boolean): String {
-        //Convert lat or long from DD format to DDm format
-        //Integer is the degrees
-        //Multiply the decimal part by 60
-        //integer of result is minutes, append the remaining seconds to 4 decimal places
-        var ddElement = element.toString()
+    private val BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action!! == ACTION_USB_PERMISSION) {
+                //val granted: Boolean = intent.extras!!.getBoolean(UsbManager.EXTRA_PERMISSION_GRANTED)
+                // there seems to be a bug in android related to sending the intent as mutable vs immutable
+                // so we just have to assume it is granted here
+                //https://stackoverflow.com/questions/73267829/androidstudio-usb-extra-permission-granted-returns-false-always
+                var granted = true
+                if (granted) {
+                    m_connection = m_usbManager.openDevice(m_device)
+                    m_serial = UsbSerialDevice.createUsbSerialDevice(m_device, m_connection)
+                    if (m_serial != null) {
+                        if (m_serial!!.open()) {
+                            m_serial!!.setBaudRate(9600)
+                            m_serial!!.setDataBits(DATA_BITS_8)
+                            m_serial!!.setStopBits(STOP_BITS_1)
+                            m_serial!!.setParity(PARITY_NONE)
+                            m_serial!!.setFlowControl(FLOW_CONTROL_XON_XOFF)
+                            m_serial!!.read(mCallback)
 
-        if (ddElement.first() == '-') {
-            ddElement = ddElement.drop(1) //remove negative sign
-        }
-
-        var degMin = (ddElement.toString()).split(".")
-        var degrees = degMin[0]
-
-        if (longitude) {
-            if (degrees.length < 3) {
-                when (degrees.length) { //pad longitude degrees out to 3 chars
-                    0 -> degrees = "000" + degrees
-                    1 -> degrees = "00" + degrees
-                    2 -> degrees = "0" + degrees
+                        }
+                    }
                 }
-            }
-        } else {
-            if (degrees.length == 1) {
-                degrees = "0" + degrees //pad out latitude degrees to two digits
-            }
-        }
-
-        // multiple decimal remainder by 60, integer is minutes, decimal is seconds
-        var minSec = (("." + degMin[1]).toDouble() * 60).toString().split(".")
-        var minutes = minSec[0]
-        var seconds = minSec[1].take(4)
-
-        if (minutes.length == 1) {
-            minutes = "0" + minutes //pad out degrees to two digits
-        }
-
-        if (seconds.length < 4) { //not sure is this part is needed
-            var len = seconds.length
-            when (len) { //pad out to 4 chars
-                0 -> seconds += "0000"
-                1 -> seconds += "000"
-                2 -> seconds += "00"
-                3 -> seconds += "0"
+            } else if (intent.action!! == UsbManager.ACTION_USB_DEVICE_ATTACHED) {
+                UsbConnect()
+            } else if (intent.action!! == UsbManager.ACTION_USB_DEVICE_DETACHED) {
+                //todo: figure out why this intent will not fire
+                UsbDisconnect()
             }
         }
-
-        var ddmElement = degrees + minutes + "." + seconds.take(4)
-        return ddmElement
     }
 
-
     // USB Stuff
-
     private fun UsbConnect() {
         val usbDevices: HashMap<String, UsbDevice>? = m_usbManager.deviceList
         if (!usbDevices?.isEmpty()!!) {
@@ -318,12 +234,23 @@ class MainActivity : androidx.activity.ComponentActivity() {
                         }
 
                     m_usbManager.requestPermission(m_device, intent)
+                    connectedToScanner = true
                     keep = true
+                    inStartUpScreen = false //flag to switch to display and Hdisplay screens
                 }
             }
             if (keep) {
                 return
             }
+        }
+    }
+
+    @Composable
+    fun MyScreen() {
+        if (inStartUpScreen) {
+            startUpScreen()
+        } else {
+            HandleOrientationChanges()
         }
     }
 
@@ -378,42 +305,6 @@ class MainActivity : androidx.activity.ComponentActivity() {
         connectedToScanner = false
     }
 
-    private val BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action!! == ACTION_USB_PERMISSION) {
-                //val granted: Boolean = intent.extras!!.getBoolean(UsbManager.EXTRA_PERMISSION_GRANTED)
-                // there seems to be a bug in android related to sending the intent as mutable vs immutable
-                // so we just have to assume it is granted here
-                //https://stackoverflow.com/questions/73267829/androidstudio-usb-extra-permission-granted-returns-false-always
-                var granted = true
-                if (granted) {
-                    m_connection = m_usbManager.openDevice(m_device)
-                    m_serial = UsbSerialDevice.createUsbSerialDevice(m_device, m_connection)
-                    if (m_serial != null) {
-                        if (m_serial!!.open()) {
-                            m_serial!!.setBaudRate(9600)
-                            m_serial!!.setDataBits(DATA_BITS_8)
-                            m_serial!!.setStopBits(STOP_BITS_1)
-                            m_serial!!.setParity(PARITY_NONE)
-                            m_serial!!.setFlowControl(FLOW_CONTROL_XON_XOFF)
-                            m_serial!!.read(mCallback)
-                            connectedToScanner = true
-                        }
-                    }
-                }
-            } else if (intent?.action!! == UsbManager.ACTION_USB_DEVICE_ATTACHED) {
-                UsbConnect()
-            } else if (intent?.action!! == UsbManager.ACTION_USB_DEVICE_DETACHED) {
-                //todo: figure out why this intent will not fire
-                UsbDisconnect()
-            }
-        }
-    }
-
-    fun setUpSerial() {
-
-    }
-
     @Composable
     fun KeepScreenOn() {
         val currentView = LocalView.current
@@ -438,11 +329,6 @@ class MainActivity : androidx.activity.ComponentActivity() {
         }
     }
 
-    @Composable
-    fun MyScreen() {
-        HandleOrientationChanges()
-    }
-
     fun substituteUnidenIcons(data: ByteArray): ByteArray {
         subValues.forEach { value ->
             val unidenFontByte = value.key.toByte()
@@ -460,4 +346,127 @@ class MainActivity : androidx.activity.ComponentActivity() {
         val DTMCommand = "DTM,1," + dtmFormat.format(Date())
         SendUsbData(DTMCommand)
     }
+
+    //=========================================================
+    // GPS location stuff
+
+    private fun checkLocationPermission(): Boolean {
+        val hasGps = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        if (hasGps) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                runOnUiThread {
+                    locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                    try {
+                        locationManager.requestLocationUpdates(
+                            LocationManager.GPS_PROVIDER,
+                            5000,
+                            10.toFloat(),
+                            locationListener
+                        )
+                    } catch (e: Exception) {
+                        //println("Error: ${e.message}")
+                    }
+                }
+                return true
+            } else {
+                if (!locationRequestDenied) { //don't ask again if user already said no
+                    // Request permission
+                    ActivityCompat.requestPermissions(
+                        this,
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        REQUEST_CODE
+                    )
+                }
+            }
+        }
+        return false
+    }
+
+    private fun getNMEASentence(): String {
+        locationPermissionGranted = checkLocationPermission()
+        if (locationPermissionGranted) {
+            //Log.d("GPS Enabled", "GPS Enabled")
+            var lat = locationDDtoDDm(latitude, false)
+            var long = locationDDtoDDm(longitude, true)
+
+            var latNS = "N"
+            if (latitude < 0.0) {
+                latNS = "S"
+            }
+
+            var lonEW = "W"
+            if (longitude > 0.0) {
+                lonEW = "E"
+            }
+
+            //build NMEA - scanner only cares about latitude and longitude data
+            var nmeaSentence =
+                "\$GPRMC,,A," + lat + "," + latNS + "," + long + "," + lonEW + ",,,,,,"
+            return nmeaSentence
+        }
+        return ""
+    }
+
+    val locationListener = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            latitude = location.latitude
+            longitude = location.longitude
+        }
+    }
+
+    private fun locationDDtoDDm(element: Double, longitude: Boolean): String {
+        //Convert lat or long from DD format to DDm format
+        //Integer is the degrees
+        //Multiply the decimal part by 60
+        //integer of result is minutes, append the remaining seconds to 4 decimal places
+        var ddElement = element.toString()
+
+        if (ddElement.first() == '-') {
+            ddElement = ddElement.drop(1) //remove negative sign
+        }
+
+        var degMin = (ddElement.toString()).split(".")
+        var degrees = degMin[0]
+
+        if (longitude) {
+            if (degrees.length < 3) {
+                when (degrees.length) { //pad longitude degrees out to 3 chars
+                    0 -> degrees = "000" + degrees
+                    1 -> degrees = "00" + degrees
+                    2 -> degrees = "0" + degrees
+                }
+            }
+        } else {
+            if (degrees.length == 1) {
+                degrees = "0" + degrees //pad out latitude degrees to two digits
+            }
+        }
+
+        // multiple decimal remainder by 60, integer is minutes, decimal is seconds
+        var minSec = (("." + degMin[1]).toDouble() * 60).toString().split(".")
+        var minutes = minSec[0]
+        var seconds = minSec[1].take(4)
+
+        if (minutes.length == 1) {
+            minutes = "0" + minutes //pad out degrees to two digits
+        }
+
+        if (seconds.length < 4) { //not sure is this part is needed
+            var len = seconds.length
+            when (len) { //pad out to 4 chars
+                0 -> seconds += "0000"
+                1 -> seconds += "000"
+                2 -> seconds += "00"
+                3 -> seconds += "0"
+            }
+        }
+
+        var ddmElement = degrees + minutes + "." + seconds.take(4)
+        return ddmElement
+    }
+
 }
