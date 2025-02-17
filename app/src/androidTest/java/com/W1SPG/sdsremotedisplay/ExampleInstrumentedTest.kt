@@ -20,7 +20,7 @@ class DisplayTests {
     fun simulator() {
         val vm = viewModel()
         val parse = ParseScannerData(vm)
-        connectedToScanner = true
+        connectedToScannerUSB = true
         isPortraitMode = false
 
         val lines = object {}.javaClass.getResourceAsStream("/res/raw/sds200trunksimple.txt")?.bufferedReader()?.readLines()

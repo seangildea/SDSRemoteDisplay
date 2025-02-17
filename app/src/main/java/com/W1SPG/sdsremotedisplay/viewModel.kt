@@ -12,6 +12,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
+import com.W1SPG.sdsremotedisplay.ui.theme.subValues
 
 class viewModel : ViewModel() {
 
@@ -663,7 +664,7 @@ class viewModel : ViewModel() {
                 HDisplay[line / 2] = getSTSLineData(line)
             }
 
-            if (!connectedToScanner) {
+            if (!connectedToScannerUSB && !connectedToScannerWIFI) {
                 displayLinesLength = 5
                 HDisplay[1] = "111111" //force large font
                 HDisplay[4] = "NO CONNECTION"
@@ -764,5 +765,4 @@ class viewModel : ViewModel() {
         }
 
     }
-
 }

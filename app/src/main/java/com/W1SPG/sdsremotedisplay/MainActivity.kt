@@ -19,6 +19,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -46,8 +47,11 @@ var m_serial: UsbSerialDevice? = null
 var m_connection: UsbDeviceConnection? = null
 val vm = viewModel()
 val sdsData = ParseScannerData(vm)
-var connectedToScanner = false
+val network = Network()
+var connectedToScannerUSB = false
 val ACTION_USB_PERMISSION = "permission"
+
+var connectedToScannerWIFI = false
 
 val REQUEST_CODE = 1
 var locationPermissionGranted: Boolean = false
@@ -67,6 +71,7 @@ var isPortraitMode: Boolean = true
 var inStartUpScreen: Boolean by mutableStateOf(true)
 
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         m_usbManager = getSystemService(USB_SERVICE) as UsbManager
@@ -96,11 +101,14 @@ class MainActivity : ComponentActivity() {
         try {
             displayTimer.schedule(object : TimerTask() {
                 override fun run() {
-                    runOnUiThread {
-                        if (connectedToScanner) {
-                            if (vm.clearToSend) {
-                                for (command in vm.scannerCommands) {
+                    //runOnUiThread {
+                        if (connectedToScannerUSB or connectedToScannerWIFI) {
+
+                            for (command in vm.scannerCommands) {
+                                if (vm.clearToSend) {
                                     SendUsbData(command)
+                                } else if (connectedToScannerWIFI) {
+                                    network.wifiSendData(command)
                                 }
                             }
 
@@ -109,29 +117,35 @@ class MainActivity : ComponentActivity() {
                                 var keys = vm.keyPress.split(" ")
                                 for (key in keys) {
                                     Log.d("In Key press", key)
-                                    SendUsbData(key)
+                                    if (connectedToScannerUSB) {
+                                        SendUsbData(key)
+                                    } else if (connectedToScannerWIFI) {
+                                        network.wifiSendData(key)
+                                    }
                                 }
                                 vm.keyPress = ""
                             }
 
                             //check for a disconnect
-                            try {
-                                var deviceList: HashMap<String, UsbDevice>? =
-                                    m_usbManager.deviceList
-                                if (deviceList != null) {
-                                    if (deviceList.isEmpty()) {
-                                        vm.lostConnection = true
-                                    } else {
-                                        vm.lostConnection = false
+                            if (connectedToScannerUSB) {
+                                try {
+                                    var deviceList: HashMap<String, UsbDevice>? =
+                                        m_usbManager.deviceList
+                                    if (deviceList != null) {
+                                        if (deviceList.isEmpty()) {
+                                            vm.lostConnection = true
+                                        } else {
+                                            vm.lostConnection = false
+                                        }
                                     }
+                                } catch (e: Exception) {
+                                    //println("Error: ${e.message}")
                                 }
-                            } catch (e: Exception) {
-                                //println("Error: ${e.message}")
                             }
 
                             vm.updateDisplayData()
                         }
-                    }
+                    //}
                 }
             }, displayTimerDelay.toLong(), displayTimerPeriod.toLong())
 
@@ -141,7 +155,11 @@ class MainActivity : ComponentActivity() {
                 override fun run() {
                     var nmeaSentence = getNMEASentence()
                     if (nmeaSentence != "") {
-                        SendUsbData(nmeaSentence)
+                        if (connectedToScannerUSB) {
+                            SendUsbData(nmeaSentence)
+                        } else if (connectedToScannerWIFI) {
+                            network.wifiSendData(nmeaSentence)
+                        }
                         //Log.d("NMEA Sent", nmeaSentence)
                     }
                 }
@@ -234,7 +252,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                     m_usbManager.requestPermission(m_device, intent)
-                    connectedToScanner = true
+                    connectedToScannerUSB = true
                     keep = true
                     inStartUpScreen = false //flag to switch to display and Hdisplay screens
                 }
@@ -248,7 +266,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun MyScreen() {
         if (inStartUpScreen) {
-            startUpScreen()
+            startUpScreen(network, sdsData)
         } else {
             HandleOrientationChanges()
         }
@@ -288,7 +306,7 @@ class MainActivity : ComponentActivity() {
 
                 var lastChar: String = usbRxData.takeLast(1)
                 if (lastChar == "\r") { //concatenate until last char is \r
-                    Log.d("Rx:", rxData)
+                    //Log.d("Rx:", rxData)
                     if (rxData != "") {
                         sdsData.decodeResponse(rxData)
                     }
@@ -302,7 +320,18 @@ class MainActivity : ComponentActivity() {
 
     private fun UsbDisconnect() {
         m_serial?.close()
-        connectedToScanner = false
+        connectedToScannerUSB = false
+    }
+
+    fun substituteUnidenIcons(data: ByteArray): ByteArray {
+        subValues.forEach { value ->
+            val unidenFontByte = value.key.toByte()
+            var found = data.indexOf(unidenFontByte)
+            if (found > 0) {
+                data.set(found, value.value.toByte())
+            }
+        }
+        return data
     }
 
     @Composable
@@ -329,22 +358,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun substituteUnidenIcons(data: ByteArray): ByteArray {
-        subValues.forEach { value ->
-            val unidenFontByte = value.key.toByte()
-            var found = data.indexOf(unidenFontByte)
-            if (found > 0) {
-                data.set(found, value.value.toByte())
-            }
-        }
-        return data
-    }
 
     // set the time on the scanner to android system time with the DTM command
     fun timeSet() {
         val dtmFormat = SimpleDateFormat("yyyy,MM,dd,HH,mm,ss")
         val DTMCommand = "DTM,1," + dtmFormat.format(Date())
-        SendUsbData(DTMCommand)
+        if (connectedToScannerUSB) {
+            SendUsbData(DTMCommand)
+        } else if (connectedToScannerWIFI) {
+            network.wifiSendData(DTMCommand)
+        }
     }
 
     //=========================================================

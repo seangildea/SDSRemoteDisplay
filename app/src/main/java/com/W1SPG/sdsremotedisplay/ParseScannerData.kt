@@ -202,6 +202,8 @@ class ParseScannerData(var vm: viewModel) {
                         when {
                             vm.isSDSScanner() -> stsDecodeSDS(message)
                             vm.model.contains("536") -> stsDecode536(message)
+                            //436 seems to use the same display size as SDS100
+                            vm.model.contains("436") -> stsDecodeSDS(message)
                             else -> vm.stsLines = message.split(",").toTypedArray()
                         }
                     }
