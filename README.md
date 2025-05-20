@@ -54,6 +54,9 @@ When in vertical display, touching the text of the system, department, or channe
 
 To install this Android APK, you will need to sideload it.  Here are a couple of websites for how to do it.
 
+If you would prefer to install via Google Play, send me an email and I will add you to the beta tester list and send a link to install it.
+W1SPG.Radio at gmail.com
+
 https://www.xda-developers.com/how-to-sideload-install-android-app-apk/
 
 https://www.howtogeek.com/313433/how-to-sideload-apps-on-android/
