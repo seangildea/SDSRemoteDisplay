@@ -230,7 +230,7 @@ fun Display() {
 
                 FilledTonalButton(
                     onClick = { vm.pressButton(">") }, shape = RectangleShape
-                    ) {
+                ) {
                     Text(
                         text = ">",
                         fontSize = 18.sp,

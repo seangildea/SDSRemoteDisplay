@@ -41,13 +41,11 @@ import java.util.Date
 import java.util.Timer
 import java.util.TimerTask
 
-lateinit var m_usbManager: UsbManager
 var m_device: UsbDevice? = null
 var m_serial: UsbSerialDevice? = null
 var m_connection: UsbDeviceConnection? = null
 val vm = viewModel()
 val sdsData = ParseScannerData(vm)
-val network = Network()
 var connectedToScannerUSB = false
 val ACTION_USB_PERMISSION = "permission"
 
@@ -56,7 +54,9 @@ var connectedToScannerWIFI = false
 val REQUEST_CODE = 1
 var locationPermissionGranted: Boolean = false
 var locationRequestDenied = false
+lateinit var m_usbManager: UsbManager
 lateinit var locationManager: LocationManager
+lateinit var network :Network
 
 var rxData: String = ""
 
@@ -77,6 +77,7 @@ class MainActivity : ComponentActivity() {
         m_usbManager = getSystemService(USB_SERVICE) as UsbManager
 
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        network = Network(applicationContext)
 
         val filter = IntentFilter()
         filter.addAction(ACTION_USB_PERMISSION)
@@ -102,49 +103,49 @@ class MainActivity : ComponentActivity() {
             displayTimer.schedule(object : TimerTask() {
                 override fun run() {
                     //runOnUiThread {
-                        if (connectedToScannerUSB or connectedToScannerWIFI) {
+                    if (connectedToScannerUSB or connectedToScannerWIFI) {
 
-                            for (command in vm.scannerCommands) {
-                                if (vm.clearToSend) {
-                                    SendUsbData(command)
-                                } else if (connectedToScannerWIFI) {
-                                    network.wifiSendData(command)
-                                }
+                        for (command in vm.scannerCommands) {
+                            if (vm.clearToSend) {
+                                SendUsbData(command)
+                            } else if (connectedToScannerWIFI) {
+                                network.wifiSendData(command)
                             }
-
-                            //send any button presses
-                            if (vm.keyPress != "") {
-                                var keys = vm.keyPress.split(" ")
-                                for (key in keys) {
-                                    Log.d("In Key press", key)
-                                    if (connectedToScannerUSB) {
-                                        SendUsbData(key)
-                                    } else if (connectedToScannerWIFI) {
-                                        network.wifiSendData(key)
-                                    }
-                                }
-                                vm.keyPress = ""
-                            }
-
-                            //check for a disconnect
-                            if (connectedToScannerUSB) {
-                                try {
-                                    var deviceList: HashMap<String, UsbDevice>? =
-                                        m_usbManager.deviceList
-                                    if (deviceList != null) {
-                                        if (deviceList.isEmpty()) {
-                                            vm.lostConnection = true
-                                        } else {
-                                            vm.lostConnection = false
-                                        }
-                                    }
-                                } catch (e: Exception) {
-                                    //println("Error: ${e.message}")
-                                }
-                            }
-
-                            vm.updateDisplayData()
                         }
+
+                        //send any button presses
+                        if (vm.keyPress != "") {
+                            var keys = vm.keyPress.split(" ")
+                            for (key in keys) {
+                                Log.d("In Key press", key)
+                                if (connectedToScannerUSB) {
+                                    SendUsbData(key)
+                                } else if (connectedToScannerWIFI) {
+                                    network.wifiSendData(key)
+                                }
+                            }
+                            vm.keyPress = ""
+                        }
+
+                        //check for a disconnect
+                        if (connectedToScannerUSB) {
+                            try {
+                                var deviceList: HashMap<String, UsbDevice>? =
+                                    m_usbManager.deviceList
+                                if (deviceList != null) {
+                                    if (deviceList.isEmpty()) {
+                                        vm.lostConnection = true
+                                    } else {
+                                        vm.lostConnection = false
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                //println("Error: ${e.message}")
+                            }
+                        }
+
+                        vm.updateDisplayData()
+                    }
                     //}
                 }
             }, displayTimerDelay.toLong(), displayTimerPeriod.toLong())
