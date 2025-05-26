@@ -71,7 +71,6 @@ var isPortraitMode: Boolean = true
 var inStartUpScreen: Boolean by mutableStateOf(true)
 
 class MainActivity : ComponentActivity() {
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         m_usbManager = getSystemService(USB_SERVICE) as UsbManager
@@ -84,6 +83,7 @@ class MainActivity : ComponentActivity() {
         filter.addAction(UsbManager.ACTION_USB_ACCESSORY_ATTACHED)
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED)
         registerReceiver(BroadcastReceiver, filter, RECEIVER_EXPORTED)
+
         setContent {
             KeepScreenOn()
             MyScreen()
@@ -267,7 +267,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun MyScreen() {
         if (inStartUpScreen) {
-            startUpScreen(network, sdsData)
+            startUpScreen(network)
         } else {
             HandleOrientationChanges()
         }
