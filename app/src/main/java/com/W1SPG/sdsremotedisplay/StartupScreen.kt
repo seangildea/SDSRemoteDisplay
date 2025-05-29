@@ -24,11 +24,12 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-//var wifi = Network()
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 
 @Composable
-fun startUpScreen(wifi: Network, sdsData: ParseScannerData) {
+fun startUpScreen(wifi: NetworkViewModel) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -37,38 +38,53 @@ fun startUpScreen(wifi: Network, sdsData: ParseScannerData) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(100.dp))
-        Text(text = "SDSRemoteDisplay", fontSize = 45.sp,
-            color = Color.Red  )
-        Text(text = " By W1SPG", fontSize = 25.sp,
-            color = Color.White)
+        Text(
+            text = "SDSRemoteDisplay",
+            fontSize = 45.sp,
+            color = Color.Red
+        )
+        Text(
+            text = " By W1SPG",
+            fontSize = 25.sp,
+            color = Color.White
+        )
         Spacer(modifier = Modifier.height(80.dp))
-        Text(text = "Connect USB cable to scanner to continue", fontSize = 20.sp,
-            color = Color.White)
+        Text(
+            text = "Connect USB cable to scanner to continue or enter scanner's IP address below",
+            fontSize = 20.sp,
+            color = Color.White
+        )
         Spacer(modifier = Modifier.height(80.dp))
-
 
         var address by remember { mutableStateOf("") }
         TextField(
             value = address,
-            onValueChange = { address = it},
+            onValueChange = { address = it },
             label = { Text("Scanner IP Address") },
             textStyle = TextStyle.Default.copy(fontSize = 45.sp),
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done // Set "Enter" key to "Done" action
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    // Call the same function as the button's onClick
+                    begin(wifi, address)
+                }
+            )
         )
 
         FilledTonalButton(
-            onClick = { begin(wifi, address)
-                      },
+            onClick = { begin(wifi, address) },
             shape = RectangleShape,
             contentPadding = PaddingValues(0.dp),
             modifier = Modifier.size(width = 200.dp, height = 50.dp)
         ) { Text(text = "Connect to Wifi") }
-
     }
 }
 
-fun begin(wifi: Network, address: String) {
-    wifi.connect( address, sdsData)
+fun begin(wifi: NetworkViewModel, address: String) {
+    wifi.connect(address, sdsData)
     connectedToScannerWIFI = true
     inStartUpScreen = false
     wifi.wifiRxData()

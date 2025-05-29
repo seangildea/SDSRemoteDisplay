@@ -19,7 +19,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.RequiresApi
+import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -41,13 +41,11 @@ import java.util.Date
 import java.util.Timer
 import java.util.TimerTask
 
-lateinit var m_usbManager: UsbManager
 var m_device: UsbDevice? = null
 var m_serial: UsbSerialDevice? = null
 var m_connection: UsbDeviceConnection? = null
 val vm = viewModel()
 val sdsData = ParseScannerData(vm)
-val network = Network()
 var connectedToScannerUSB = false
 val ACTION_USB_PERMISSION = "permission"
 
@@ -56,6 +54,7 @@ var connectedToScannerWIFI = false
 val REQUEST_CODE = 1
 var locationPermissionGranted: Boolean = false
 var locationRequestDenied = false
+lateinit var m_usbManager: UsbManager
 lateinit var locationManager: LocationManager
 
 var rxData: String = ""
@@ -71,7 +70,7 @@ var isPortraitMode: Boolean = true
 var inStartUpScreen: Boolean by mutableStateOf(true)
 
 class MainActivity : ComponentActivity() {
-    @RequiresApi(Build.VERSION_CODES.O)
+    val networkViewModel: NetworkViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         m_usbManager = getSystemService(USB_SERVICE) as UsbManager
@@ -83,6 +82,7 @@ class MainActivity : ComponentActivity() {
         filter.addAction(UsbManager.ACTION_USB_ACCESSORY_ATTACHED)
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED)
         registerReceiver(BroadcastReceiver, filter, RECEIVER_EXPORTED)
+
         setContent {
             KeepScreenOn()
             MyScreen()
@@ -96,55 +96,56 @@ class MainActivity : ComponentActivity() {
 
     private fun DoStuff() {
         val displayTimerDelay = 0
-        val displayTimerPeriod = 300 // repeat
+        var displayTimerPeriod = 800
+        if (connectedToScannerUSB) { displayTimerPeriod=300 }
 
         try {
             displayTimer.schedule(object : TimerTask() {
                 override fun run() {
                     //runOnUiThread {
-                        if (connectedToScannerUSB or connectedToScannerWIFI) {
+                    if (connectedToScannerUSB or connectedToScannerWIFI) {
 
-                            for (command in vm.scannerCommands) {
-                                if (vm.clearToSend) {
-                                    SendUsbData(command)
-                                } else if (connectedToScannerWIFI) {
-                                    network.wifiSendData(command)
-                                }
+                        for (command in vm.scannerCommands) {
+                            if (vm.clearToSend) {
+                                SendUsbData(command)
+                            } else if (connectedToScannerWIFI) {
+                                networkViewModel.wifiSendData(command)
                             }
-
-                            //send any button presses
-                            if (vm.keyPress != "") {
-                                var keys = vm.keyPress.split(" ")
-                                for (key in keys) {
-                                    Log.d("In Key press", key)
-                                    if (connectedToScannerUSB) {
-                                        SendUsbData(key)
-                                    } else if (connectedToScannerWIFI) {
-                                        network.wifiSendData(key)
-                                    }
-                                }
-                                vm.keyPress = ""
-                            }
-
-                            //check for a disconnect
-                            if (connectedToScannerUSB) {
-                                try {
-                                    var deviceList: HashMap<String, UsbDevice>? =
-                                        m_usbManager.deviceList
-                                    if (deviceList != null) {
-                                        if (deviceList.isEmpty()) {
-                                            vm.lostConnection = true
-                                        } else {
-                                            vm.lostConnection = false
-                                        }
-                                    }
-                                } catch (e: Exception) {
-                                    //println("Error: ${e.message}")
-                                }
-                            }
-
-                            vm.updateDisplayData()
                         }
+
+                        //send any button presses
+                        if (vm.keyPress != "") {
+                            var keys = vm.keyPress.split(" ")
+                            for (key in keys) {
+                                Log.d("In Key press", key)
+                                if (connectedToScannerUSB) {
+                                    SendUsbData(key)
+                                } else if (connectedToScannerWIFI) {
+                                    networkViewModel.wifiSendData(key)
+                                }
+                            }
+                            vm.keyPress = ""
+                        }
+
+                        //check for a disconnect
+                        if (connectedToScannerUSB) {
+                            try {
+                                var deviceList: HashMap<String, UsbDevice>? =
+                                    m_usbManager.deviceList
+                                if (deviceList != null) {
+                                    if (deviceList.isEmpty()) {
+                                        vm.lostConnection = true
+                                    } else {
+                                        vm.lostConnection = false
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                //println("Error: ${e.message}")
+                            }
+                        }
+
+                        vm.updateDisplayData()
+                    }
                     //}
                 }
             }, displayTimerDelay.toLong(), displayTimerPeriod.toLong())
@@ -158,7 +159,7 @@ class MainActivity : ComponentActivity() {
                         if (connectedToScannerUSB) {
                             SendUsbData(nmeaSentence)
                         } else if (connectedToScannerWIFI) {
-                            network.wifiSendData(nmeaSentence)
+                            networkViewModel.wifiSendData(nmeaSentence)
                         }
                         //Log.d("NMEA Sent", nmeaSentence)
                     }
@@ -166,8 +167,8 @@ class MainActivity : ComponentActivity() {
             }, gpsTimerDelay.toLong(), gpsTimerPeriod.toLong())
 
             // Set the scanner to local time
-            val timeSetDelay = 30000
-            val timerSetPeriod = 600000
+            val timeSetDelay = 5000
+            val timerSetPeriod = 200000
             gpsTimer.schedule(object : TimerTask() {
                 override fun run() {
                     timeSet()
@@ -266,7 +267,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun MyScreen() {
         if (inStartUpScreen) {
-            startUpScreen(network, sdsData)
+            startUpScreen(networkViewModel)
         } else {
             HandleOrientationChanges()
         }
@@ -366,7 +367,7 @@ class MainActivity : ComponentActivity() {
         if (connectedToScannerUSB) {
             SendUsbData(DTMCommand)
         } else if (connectedToScannerWIFI) {
-            network.wifiSendData(DTMCommand)
+            networkViewModel.wifiSendData(DTMCommand)
         }
     }
 
