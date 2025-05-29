@@ -1,12 +1,14 @@
 package com.W1SPG.sdsremotedisplay
 
-import android.content.Context
+import android.app.Application
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
 
-class Network(private val context: Context) {
+class NetworkViewModel(application: Application) : AndroidViewModel(application) {
+    val context = getApplication<Application>().applicationContext
     private val port = 50536
     private val scannerSocket: DatagramSocket = DatagramSocket()
     var receiveBuffer = ByteArray(4096)
@@ -75,8 +77,6 @@ class Network(private val context: Context) {
             vlcPlayer = null
         }
     }
-
-    fun isVlcPlaying(): Boolean = vlcPlayer?.isPlaying ?: false
 
     fun cleanup() {
         try {

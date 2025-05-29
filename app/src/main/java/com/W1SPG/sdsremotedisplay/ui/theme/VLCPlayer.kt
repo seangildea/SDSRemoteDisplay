@@ -28,7 +28,12 @@ class VlcPlayer(
             Log.d("VlcPlayer", "Android Version: ${android.os.Build.VERSION.RELEASE}")
             Log.d("VlcPlayer", "Context: ${context.javaClass.name}, RTSP URL: $rtspUrl")
 
-            val options: MutableList<String> = mutableListOf("--verbose=2")
+            val options: MutableList<String> = mutableListOf(
+                "--network-caching=200",
+                "--audio-desync=-100",
+                "--live-caching=150",
+                "--audio-resampler=soxr")
+
             Log.d("VlcPlayer", "Initializing LibVLC with options: $options")
             libVlc = LibVLC(context, options)
             mediaPlayer = MediaPlayer(libVlc)

@@ -85,4 +85,5 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest:$rootProject.composeVersion")
     implementation("com.github.felHR85:UsbSerial:6.1.0")
     implementation("org.videolan.android:libvlc-all:3.6.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
 }

@@ -19,7 +19,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.RequiresApi
+import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -56,7 +56,6 @@ var locationPermissionGranted: Boolean = false
 var locationRequestDenied = false
 lateinit var m_usbManager: UsbManager
 lateinit var locationManager: LocationManager
-lateinit var network :Network
 
 var rxData: String = ""
 
@@ -71,12 +70,12 @@ var isPortraitMode: Boolean = true
 var inStartUpScreen: Boolean by mutableStateOf(true)
 
 class MainActivity : ComponentActivity() {
+    val networkViewModel: NetworkViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         m_usbManager = getSystemService(USB_SERVICE) as UsbManager
 
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-        network = Network(applicationContext)
 
         val filter = IntentFilter()
         filter.addAction(ACTION_USB_PERMISSION)
@@ -97,7 +96,8 @@ class MainActivity : ComponentActivity() {
 
     private fun DoStuff() {
         val displayTimerDelay = 0
-        val displayTimerPeriod = 300 // repeat
+        var displayTimerPeriod = 800
+        if (connectedToScannerUSB) { displayTimerPeriod=300 }
 
         try {
             displayTimer.schedule(object : TimerTask() {
@@ -109,7 +109,7 @@ class MainActivity : ComponentActivity() {
                             if (vm.clearToSend) {
                                 SendUsbData(command)
                             } else if (connectedToScannerWIFI) {
-                                network.wifiSendData(command)
+                                networkViewModel.wifiSendData(command)
                             }
                         }
 
@@ -121,7 +121,7 @@ class MainActivity : ComponentActivity() {
                                 if (connectedToScannerUSB) {
                                     SendUsbData(key)
                                 } else if (connectedToScannerWIFI) {
-                                    network.wifiSendData(key)
+                                    networkViewModel.wifiSendData(key)
                                 }
                             }
                             vm.keyPress = ""
@@ -159,7 +159,7 @@ class MainActivity : ComponentActivity() {
                         if (connectedToScannerUSB) {
                             SendUsbData(nmeaSentence)
                         } else if (connectedToScannerWIFI) {
-                            network.wifiSendData(nmeaSentence)
+                            networkViewModel.wifiSendData(nmeaSentence)
                         }
                         //Log.d("NMEA Sent", nmeaSentence)
                     }
@@ -167,8 +167,8 @@ class MainActivity : ComponentActivity() {
             }, gpsTimerDelay.toLong(), gpsTimerPeriod.toLong())
 
             // Set the scanner to local time
-            val timeSetDelay = 30000
-            val timerSetPeriod = 600000
+            val timeSetDelay = 5000
+            val timerSetPeriod = 200000
             gpsTimer.schedule(object : TimerTask() {
                 override fun run() {
                     timeSet()
@@ -267,7 +267,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun MyScreen() {
         if (inStartUpScreen) {
-            startUpScreen(network)
+            startUpScreen(networkViewModel)
         } else {
             HandleOrientationChanges()
         }
@@ -367,7 +367,7 @@ class MainActivity : ComponentActivity() {
         if (connectedToScannerUSB) {
             SendUsbData(DTMCommand)
         } else if (connectedToScannerWIFI) {
-            network.wifiSendData(DTMCommand)
+            networkViewModel.wifiSendData(DTMCommand)
         }
     }
 

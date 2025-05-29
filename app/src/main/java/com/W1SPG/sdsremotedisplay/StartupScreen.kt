@@ -29,7 +29,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 
 @Composable
-fun startUpScreen(wifi: Network) {
+fun startUpScreen(wifi: NetworkViewModel) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -50,7 +50,7 @@ fun startUpScreen(wifi: Network) {
         )
         Spacer(modifier = Modifier.height(80.dp))
         Text(
-            text = "Connect USB cable to scanner to continue",
+            text = "Connect USB cable to scanner to continue or enter scanner's IP address below",
             fontSize = 20.sp,
             color = Color.White
         )
@@ -83,7 +83,7 @@ fun startUpScreen(wifi: Network) {
     }
 }
 
-fun begin(wifi: Network, address: String) {
+fun begin(wifi: NetworkViewModel, address: String) {
     wifi.connect(address, sdsData)
     connectedToScannerWIFI = true
     inStartUpScreen = false
