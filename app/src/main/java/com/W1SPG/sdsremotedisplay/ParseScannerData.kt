@@ -193,7 +193,7 @@ class ParseScannerData(var vm: viewModel) {
                             vm.longitude = parts[2]
                             vm.range = parts[3]
                         } catch (e: Exception) {
-                            println("Error 176: ${e.message}")
+                            //println("Error 176: ${e.message}")
                         }
                     }
 
@@ -221,7 +221,7 @@ class ParseScannerData(var vm: viewModel) {
                 }
             }
         } catch (e: Exception) {
-            println("Error 202: ${e.message}")
+            //println("Error 202: ${e.message}")
         }
     }
 
@@ -264,17 +264,21 @@ class ParseScannerData(var vm: viewModel) {
         var nextCommaLoc = data.indexOf(",")
         vm.stsLines[1] = data.substring(0, nextCommaLoc)
         data = data.removeRange(0, nextCommaLoc + 1 )
-        for (i in 2..(((vm.stsLines[1].length) * 2) +1) ) {
-            if (data.get(0) == ',') {
-                vm.stsLines[i] = ""
-                data = data.removeRange(0, 1)
-            } else if (data.get(35) == ',') {
-                vm.stsLines[i] = data.substring(0, 35)
-                data = data.removeRange(0, 36)
-            } else if (data.get(36) == ',') {
-                vm.stsLines[i] = data.substring(0, 36)
-                data = data.removeRange(0, 37)
+        try {
+            for (i in 2..(((vm.stsLines[1].length) * 2) + 1)) {
+                if (data.get(0) == ',') {
+                    vm.stsLines[i] = ""
+                    data = data.removeRange(0, 1)
+                } else if (data.get(35) == ',') {
+                    vm.stsLines[i] = data.substring(0, 35)
+                    data = data.removeRange(0, 36)
+                } else if (data.get(36) == ',') {
+                    vm.stsLines[i] = data.substring(0, 36)
+                    data = data.removeRange(0, 37)
+                }
             }
+        } catch (e:Exception) {
+            //println(e.toString() + ", " + string)
         }
     }
 }
