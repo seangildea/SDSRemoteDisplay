@@ -21,7 +21,7 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
         try {
             scannerAddr = InetAddress.getByName(ipAddress)
         } catch (e: Exception) {
-            Log.e("Connect Exception:", e.message ?: "Unknown error")
+            //Log.e("Connect Exception:", e.message ?: "Unknown error")
         }
     }
 
@@ -31,7 +31,7 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
             val packet = DatagramPacket(byteInput, byteInput.size, scannerAddr, port)
             scannerSocket.send(packet)
         } catch (e: Exception) {
-            Log.e("TX Exception:", e.message ?: "Unknown error")
+            //Log.e("TX Exception:", e.message ?: "Unknown error")
         }
     }
 
@@ -47,7 +47,7 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
                     }
                     rxData = ""
                 } catch (e: Exception) {
-                    Log.e("RX Exception", e.message ?: "Unknown error")
+                    //Log.e("RX Exception", e.message ?: "Unknown error")
                 }
             }
         }.start()
@@ -57,22 +57,23 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
                 val audioURL = "rtsp:/" + scannerAddr + ":554/au:scanner.au"
                 vlcPlayer = VlcPlayer(context, audioURL)
                 if (vlcPlayer?.initializationError != null) {
-                    Log.e("Network", "VlcPlayer failed to initialize: ${vlcPlayer?.initializationError}")
+                    //Log.e("Network", "VlcPlayer failed to initialize: ${vlcPlayer?.initializationError}")
                 } else {
                     vlcPlayer?.play()
                 }
             } catch (e: Exception) {
-                Log.e("Network", "Failed to initialize VlcPlayer: ${e.message}", e)
+                //Log.e("Network", "Failed to initialize VlcPlayer: ${e.message}", e)
             }
         }.start()
     }
 
     fun stopVlcPlayback() {
         try {
+            //Log.d("Network", "Stopped Called")
             vlcPlayer?.stop()
             vlcPlayer?.release()
         } catch (e: Exception) {
-            Log.e("Network", "Failed to stop VlcPlayer: ${e.message}", e)
+            //Log.e("Network", "Failed to stop VlcPlayer: ${e.message}", e)
         } finally {
             vlcPlayer = null
         }
@@ -83,7 +84,7 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
             stopVlcPlayback()
             scannerSocket.close()
         } catch (e: Exception) {
-            Log.e("Network", "Failed to cleanup: ${e.message}", e)
+            //Log.e("Network", "Failed to cleanup: ${e.message}", e)
         }
     }
 

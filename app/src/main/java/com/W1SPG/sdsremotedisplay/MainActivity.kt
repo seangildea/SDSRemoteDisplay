@@ -94,10 +94,19 @@ class MainActivity : ComponentActivity() {
         DoStuff()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        // Unregister BroadcastReceiver
+        BroadcastReceiver?.let {
+            unregisterReceiver(it)
+            //BroadcastReceiver = null
+            //Log.d("MainActivity", "Unregistered USB BroadcastReceiver")
+        }
+    }
+
     private fun DoStuff() {
         val displayTimerDelay = 0
-        var displayTimerPeriod = 800
-        if (connectedToScannerUSB) { displayTimerPeriod=300 }
+        var displayTimerPeriod = 300
 
         try {
             displayTimer.schedule(object : TimerTask() {
@@ -117,7 +126,7 @@ class MainActivity : ComponentActivity() {
                         if (vm.keyPress != "") {
                             var keys = vm.keyPress.split(" ")
                             for (key in keys) {
-                                Log.d("In Key press", key)
+                                //Log.d("In Key press", key)
                                 if (connectedToScannerUSB) {
                                     SendUsbData(key)
                                 } else if (connectedToScannerWIFI) {
@@ -198,7 +207,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private val BroadcastReceiver = object : BroadcastReceiver() {
+    private var BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action!! == ACTION_USB_PERMISSION) {
                 //val granted: Boolean = intent.extras!!.getBoolean(UsbManager.EXTRA_PERMISSION_GRANTED)
@@ -314,7 +323,7 @@ class MainActivity : ComponentActivity() {
                     rxData = ""
                 }
             } catch (e: Exception) {
-                println("Error: ${e.message}")
+                //println("Error: ${e.message}")
             }
         }
     }

@@ -234,7 +234,7 @@ class viewModel : ViewModel() {
                     if (curVol < maxVolume) {
                         var newVol = curVol + 1
                         keyPress = "VOL," + newVol.toString()
-                        Log.d("VOLUME", "up")
+                        //Log.d("VOLUME", "up")
                     }
                 }
 
@@ -243,7 +243,7 @@ class viewModel : ViewModel() {
                     if (curVol > 0) {
                         var newVol = curVol - 1
                         keyPress = "VOL," + newVol.toString()
-                        Log.d("VOLUME", "down")
+                        //Log.d("VOLUME", "down")
                     }
                 }
 
@@ -308,7 +308,7 @@ class viewModel : ViewModel() {
             }
             return "RSSI:" + rssiString + " dBm"
         } catch (e: Exception) {
-            println("Error: ${e.message}")
+            //println("Error: ${e.message}")
             return ""
         }
     }
