@@ -23,8 +23,8 @@ Horizontal display example (SDS Scanner):
 
 <img src="https://github.com/seangildea/SDSRemoteDisplay/blob/master/Horizontal1.jpg" width="400" height="200">
 
-
-It does not transfer audio.
+When connected by Wifi to a Wifi capable scanner, it will attempt to stream the audio from the scanner to the phone.
+Audio is not transfered over a USB connection.
 
 At this point it will not show the waterfall display.
 
